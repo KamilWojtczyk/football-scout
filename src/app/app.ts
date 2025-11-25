@@ -1,12 +1,17 @@
-import { Component, signal } from '@angular/core';
+import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import { MenubarModule } from 'primeng/menubar';
+import { HeaderComponent } from './header/header.component';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet],
-  templateUrl: './app.html',
-  styleUrl: './app.scss'
+  standalone: true,
+  imports: [RouterOutlet, MenubarModule, HeaderComponent],
+  templateUrl: 'app.html',
 })
 export class App {
-  protected readonly title = signal('football-scout-site');
+  items = [
+    { label: 'Players List', routerLink: '/players', icon: 'pi pi-users', active: true },
+    { label: 'Squad Planning', routerLink: '/squad', icon: 'pi pi-sitemap' },
+  ];
 }

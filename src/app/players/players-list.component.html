@@ -1,0 +1,151 @@
+<p-toolbar class="mb-0">
+  <div class="p-toolbar-group-start">
+    <p-select
+      [options]="tabs"
+      optionLabel="name"
+      [(ngModel)]="selectedTabName"
+      (onChange)="onTabChange()"
+      placeholder="Select position"
+      [style]="{ minWidth: '10rem' }"
+    ></p-select>
+  </div>
+</p-toolbar>
+
+<div class="tbl-wrap">
+  <p-table
+    #dt
+    [value]="rows"
+    [loading]="loading"
+    [paginator]="true"
+    [rows]="50"
+    [rowsPerPageOptions]="[50, 100, 200, 500]"
+    [scrollable]="true"
+    [resizableColumns]="true"
+    [columnResizeMode]="'expand'"
+    [sortMode]="'multiple'"
+    [responsiveLayout]="'stack'"
+  >
+    <!-- Header -->
+    <ng-template pTemplate="header">
+      <tr>
+        <th
+          *ngFor="let c of cols"
+          pResizableColumn
+          [pSortableColumn]="c.key"
+          [ngClass]="{ 'sticky-name': c.sticky }"
+          [style.text-align]="getHeaderAlign(c)"
+        >
+          <div class="flex align-items-center gap-1" [style.justify-content]="getHeaderAlign(c)">
+            <span>{{ c.label }}</span>
+            <p-sortIcon [field]="c.key"></p-sortIcon>
+          </div>
+
+          <!-- Per-column filter -->
+          <p-columnFilter
+            [field]="c.key"
+            [showMenu]="false"
+            [matchMode]="'contains'"
+            [display]="'row'"
+          >
+            <ng-template pTemplate="filter" let-value let-filter="filterCallback">
+              <input
+                type="text"
+                pInputText
+                [value]="value"
+                (input)="filter($any($event.target).value)"
+                placeholder="Filter"
+                class="p-column-filter-input"
+              />
+            </ng-template>
+          </p-columnFilter>
+        </th>
+      </tr>
+    </ng-template>
+
+    <!-- Body -->
+    <ng-template pTemplate="body" let-row>
+      <tr>
+        <td
+          *ngFor="let c of cols"
+          [ngClass]="getCellClasses(row, c)"
+          [style.text-align]="getCellAlign(c)"
+        >
+          <!-- Player name with link -->
+          <ng-container *ngIf="c.kind === 'name'">
+            <a
+              *ngIf="tmLink(row) as url; else plainName"
+              [href]="url"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {{ row[c.key] || '—' }}
+            </a>
+            <ng-template #plainName>{{ row[c.key] || '—' }}</ng-template>
+          </ng-container>
+
+          <!-- Score badges (TL scores) -->
+          <ng-container *ngIf="c.kind === 'percent'">
+            <div class="badge-cell">
+              <span class="score-badge" [ngClass]="getBadgeClass(row, c)">
+                {{ row[c.key] != null ? row[c.key] : '—' }}
+              </span>
+            </div>
+          </ng-container>
+
+          <!-- Physical stats badges (percentile based) -->
+          <ng-container *ngIf="c.kind === 'physical'">
+            <div class="badge-cell">
+              <span class="score-badge" [ngClass]="getPhysicalBadgeClass(row, c)">
+                {{ formatPhysical(row[c.key], c.key) }}
+              </span>
+            </div>
+          </ng-container>
+
+          <!-- Contract with status -->
+          <ng-container *ngIf="c.kind === 'contract'">
+            <span [ngClass]="contractStatusClass(row)">
+              {{ display(row, c) }}
+            </span>
+          </ng-container>
+
+          <!-- Regular cells -->
+          <ng-container
+            *ngIf="
+              c.kind !== 'name' &&
+              c.kind !== 'percent' &&
+              c.kind !== 'physical' &&
+              c.kind !== 'contract'
+            "
+          >
+            {{ display(row, c) }}
+          </ng-container>
+        </td>
+      </tr>
+    </ng-template>
+
+    <!-- Empty message -->
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td [attr.colspan]="cols.length">
+          <div class="empty-state">
+            <i class="pi pi-info-circle"></i>
+            <p>No players found matching your filters.</p>
+            <small>Try adjusting your search or filter criteria.</small>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+
+    <!-- Loading template -->
+    <ng-template pTemplate="loadingbody">
+      <tr>
+        <td [attr.colspan]="cols.length">
+          <div class="loading-state">
+            <i class="pi pi-spin pi-spinner"></i>
+            <p>Loading players...</p>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>

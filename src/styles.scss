@@ -1,1 +1,260 @@
-/* You can add global styles to this file, and also import other style files */
+@import 'primeicons/primeicons.css';
+@import 'primeflex/primeflex.css';
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  /* Dark theme colors */
+  --bg-primary: #1a1a1a;
+  --bg-secondary: #252525;
+  --bg-tertiary: #2d2d2d;
+  --bg-card: #2a2a2a;
+  --bg-hover: #333333;
+
+  /* Score band colors - high visibility on dark */
+  --score-90: #4ade80;
+  --score-80: #86efac;
+  --score-70: #fbbf24;
+  --score-60: #fb923c;
+  --score-50: #f87171;
+  --score-low: #ef4444;
+
+  /* Text colors */
+  --text-primary: #f5f5f5;
+  --text-secondary: #a3a3a3;
+  --text-tertiary: #737373;
+  --text-muted: #525252;
+
+  /* Accent colors */
+  --accent-primary: #3b82f6;
+  --accent-hover: #2563eb;
+  --border-color: #404040;
+  --border-light: #333333;
+}
+
+/* ==================== GLOBAL STYLES ==================== */
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden;
+  font-size: 14px;
+}
+
+body {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  font-size: 13px;
+  line-height: 1.4;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ==================== APP LAYOUT ==================== */
+app-root {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+router-outlet {
+  display: none;
+}
+
+/* ==================== MENUBAR STYLING ==================== */
+.p-menubar {
+  background: var(--bg-secondary);
+  border: none;
+  border-bottom: 1px solid var(--border-color);
+  border-radius: 0;
+  padding: 0.5rem 1rem;
+  margin: 0;
+  flex-shrink: 0;
+
+  .p-menubar-root-list {
+    gap: 0.5rem;
+  }
+
+  .p-menuitem-link {
+    background: transparent;
+    color: var(--text-secondary);
+    border-radius: 6px;
+    padding: 0.5rem 1rem;
+    transition: all 0.2s;
+    font-weight: 500;
+
+    &:hover {
+      background: var(--bg-hover);
+      color: var(--text-primary);
+    }
+
+    &.router-link-active {
+      background: var(--accent-primary);
+      color: white;
+    }
+  }
+
+  .p-menuitem-icon {
+    color: inherit;
+    margin-right: 0.5rem;
+  }
+
+  .p-menuitem-text {
+    color: inherit;
+  }
+}
+
+/* ==================== TOOLBAR - COMPACT ==================== */
+.p-toolbar {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 0;
+  padding: 0.5rem 1rem;
+  margin: 0;
+  box-shadow: none;
+  flex-shrink: 0;
+}
+
+.p-toolbar-group-start {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+/* ==================== FORM CONTROLS - COMPACT ==================== */
+.p-input-icon-left {
+  i {
+    color: var(--text-tertiary);
+    font-size: 0.875rem;
+  }
+
+  input {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: 0.4rem 0.75rem 0.4rem 2rem;
+    font-size: 0.8rem;
+    border-radius: 4px;
+    transition: all 0.2s;
+    font-family: 'Inter', sans-serif;
+
+    &::placeholder {
+      color: var(--text-tertiary);
+    }
+
+    &:focus {
+      border-color: var(--accent-primary);
+      background: var(--bg-card);
+      outline: none;
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+    }
+  }
+}
+
+.p-select {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  font-size: 0.8rem;
+  color: var(--text-primary);
+  min-height: auto;
+  font-family: 'Inter', sans-serif;
+
+  .p-select-label {
+    padding: 0.4rem 0.75rem;
+  }
+
+  &:hover {
+    border-color: var(--accent-primary);
+  }
+
+  &:focus {
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+  }
+}
+
+/* ==================== PRIMENG DROPDOWN PANEL ==================== */
+.p-select-overlay {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  font-family: 'Inter', sans-serif;
+
+  .p-select-option {
+    color: var(--text-primary);
+    padding: 0.5rem 0.75rem;
+
+    &:hover {
+      background: var(--bg-hover);
+    }
+
+    &.p-select-option-selected {
+      background: var(--accent-primary);
+      color: white;
+    }
+  }
+}
+
+/* ==================== UTILITY CLASSES ==================== */
+.text-500 {
+  color: var(--text-tertiary);
+  font-size: 0.75rem;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.text-left {
+  text-align: left;
+}
+
+.font-bold {
+  font-weight: 600;
+}
+
+.text-sm {
+  font-size: 0.75rem;
+}
+
+.text-xs {
+  font-size: 0.7rem;
+}
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 1024px) {
+  .p-menubar {
+    padding: 0.5rem;
+  }
+
+  .p-toolbar {
+    padding: 0.5rem;
+  }
+
+  .p-toolbar-group-start {
+    width: 100%;
+
+    > * {
+      flex: 1;
+      min-width: 120px;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  body {
+    font-size: 12px;
+  }
+}

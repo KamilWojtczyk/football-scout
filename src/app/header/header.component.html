@@ -1,0 +1,11 @@
+<header class="app-header">
+  <h1 class="app-title">
+    <i class="pi pi-users"></i>
+    Football Scout
+  </h1>
+  <nav class="app-nav">
+    @if (manifest?.updated_at) {
+    <span class="text-500"> <i class="pi pi-clock"></i> {{ formattedUpdateDate }} </span>
+    }
+  </nav>
+</header>
