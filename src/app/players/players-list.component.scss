@@ -16,7 +16,7 @@
   .p-datatable {
     font-size: 0.8rem;
     font-family: 'Inter', sans-serif;
-    display: flex;
+    display: flex !important;
     flex-direction: column;
     height: 100%;
 
@@ -57,6 +57,10 @@
           min-width: 150px;
           max-width: 200px;
           text-align: center !important;
+        }
+
+        &.p-datatable-column-sorted {
+          background: var(--p-datatable-header-cell-selected-background) !important;
         }
       }
     }
@@ -139,7 +143,7 @@
 
   /* ==================== PAGINATOR ==================== */
   .p-paginator {
-    background: var(--bg-secondary);
+    background: var(--bg-secondary) !important;
     border-top: 1px solid var(--border-color);
 
     .p-paginator-pages {
