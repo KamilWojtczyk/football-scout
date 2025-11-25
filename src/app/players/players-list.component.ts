@@ -1,10 +1,10 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
 import { ToolbarModule } from 'primeng/toolbar';
 import { InputTextModule } from 'primeng/inputtext';
-import { TableModule } from 'primeng/table';
+import { Table, TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { SelectModule } from 'primeng/select';
 
@@ -39,12 +39,12 @@ type ColMeta = ColumnSpec & {
   styleUrls: ['./players-list.component.scss'],
 })
 export class PlayersListComponent implements OnInit, OnDestroy {
+  @ViewChild('dt') dt!: Table;
   manifest: Manifest | null = null;
   tabs: ManifestTab[] = [];
   selectedTabName: string | null = null;
 
   loading = false;
-  globalFilter = '';
 
   rows: PlayerRow[] = [];
   cols: ColMeta[] = [];
@@ -62,7 +62,6 @@ export class PlayersListComponent implements OnInit, OnDestroy {
         if (this.selectedTabName) this.loadTab(this.selectedTabName);
       },
       error: (err) => {
-        console.error('Failed to load manifest:', err);
         this.loading = false;
       },
     });
@@ -129,8 +128,6 @@ export class PlayersListComponent implements OnInit, OnDestroy {
     if (!tab) return;
 
     this.loading = true;
-    this.globalFilter = '';
-
     this.data.getTab(tab.file).subscribe({
       next: (rows) => {
         this.rows = rows || [];
@@ -149,7 +146,6 @@ export class PlayersListComponent implements OnInit, OnDestroy {
         this.loading = false;
       },
       error: (err) => {
-        console.error('Failed to load tab:', err);
         this.loading = false;
       },
     });
@@ -203,17 +199,11 @@ export class PlayersListComponent implements OnInit, OnDestroy {
   }
 
   /** Format physical stats with appropriate decimals */
-  formatPhysical(value: any, colKey: string): string {
+  formatPhysical(value: any): string {
     if (value == null) return '—';
     if (!isNum(value)) return String(value);
 
-    // 1 decimal for speed, sprints, meter/min
-    if (['max_speed', 'sprints_90', 'meter_min'].includes(colKey)) {
-      return value.toFixed(1);
-    }
-
-    // No decimals for distances
-    return value.toFixed(0);
+    return value.toFixed(2);
   }
 
   /** Get contract days left */

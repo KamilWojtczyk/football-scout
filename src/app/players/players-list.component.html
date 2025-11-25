@@ -3,6 +3,7 @@
     <p-select
       [options]="tabs"
       optionLabel="name"
+      optionValue="name"
       [(ngModel)]="selectedTabName"
       (onChange)="onTabChange()"
       placeholder="Select position"
@@ -27,12 +28,8 @@
     <!-- Header -->
     <ng-template pTemplate="header">
       <tr>
-        <th
-          *ngFor="let c of cols"
-          pResizableColumn
-          [pSortableColumn]="c.key"
-          [ngClass]="{ 'sticky-name': c.sticky }"
-        >
+        @for (c of cols; track c.key) {
+        <th pResizableColumn [pSortableColumn]="c.key" [ngClass]="{ 'sticky-name': c.sticky }">
           <div class="flex align-items-center gap-1 justify-content-center">
             <span>{{ c.label }}</span>
             <p-sortIcon [field]="c.key"></p-sortIcon>
@@ -50,6 +47,7 @@
                 type="text"
                 pInputText
                 [value]="value"
+                (click)="$event.stopPropagation()"
                 (input)="filter($any($event.target).value)"
                 placeholder="Filter"
                 class="p-column-filter-input"
@@ -57,65 +55,44 @@
             </ng-template>
           </p-columnFilter>
         </th>
+        }
       </tr>
     </ng-template>
 
     <!-- Body -->
     <ng-template pTemplate="body" let-row>
       <tr>
-        <td *ngFor="let c of cols" [ngClass]="getCellClasses(row, c)">
-          <!-- Player name with link -->
-          <ng-container *ngIf="c.kind === 'name'">
-            <a
-              *ngIf="tmLink(row) as url; else plainName"
-              [href]="url"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              {{ row[c.key] || '—' }}
-            </a>
-            <ng-template #plainName>{{ row[c.key] || '—' }}</ng-template>
-          </ng-container>
-
-          <!-- Score badges (TL scores) -->
-          <ng-container *ngIf="c.kind === 'percent'">
-            <div class="badge-cell">
-              <span class="score-badge" [ngClass]="getBadgeClass(row, c)">
-                {{ row[c.key] != null ? row[c.key] : '—' }}
-              </span>
-            </div>
-          </ng-container>
-
-          <!-- Physical stats badges (percentile based) -->
-          <ng-container *ngIf="c.kind === 'physical'">
-            <div class="badge-cell">
-              <span class="score-badge" [ngClass]="getPhysicalBadgeClass(row, c)">
-                {{ formatPhysical(row[c.key], c.key) }}
-              </span>
-            </div>
-          </ng-container>
-
-          <!-- Contract days left badges -->
-          <ng-container *ngIf="c.kind === 'contract_days'">
-            <div class="badge-cell">
-              <span class="score-badge" [ngClass]="getContractDaysClass(row)">
-                {{ formatContractDays(row) }}
-              </span>
-            </div>
-          </ng-container>
-
-          <!-- Regular cells -->
-          <ng-container
-            *ngIf="
-              c.kind !== 'name' &&
-              c.kind !== 'percent' &&
-              c.kind !== 'physical' &&
-              c.kind !== 'contract_days'
-            "
-          >
-            {{ display(row, c) }}
-          </ng-container>
+        @for (c of cols; track c.key) {
+        <td [ngClass]="getCellClasses(row, c)">
+          @if (c.kind === 'name') { @if (tmLink(row); as url) {
+          <a [href]="url" target="_blank" rel="noopener noreferrer">
+            {{ row[c.key] || '—' }}
+          </a>
+          } @else {
+          {{ row[c.key] || '—' }}
+          } } @else if (c.kind === 'percent') {
+          <div class="badge-cell">
+            <span class="score-badge" [ngClass]="getBadgeClass(row, c)">
+              {{ row[c.key] != null ? row[c.key] : '—' }}
+            </span>
+          </div>
+          } @else if (c.kind === 'physical') {
+          <div class="badge-cell">
+            <span class="score-badge" [ngClass]="getPhysicalBadgeClass(row, c)">
+              {{ formatPhysical(row[c.key]) }}
+            </span>
+          </div>
+          } @else if (c.kind === 'contract_days') {
+          <div class="badge-cell">
+            <span class="score-badge" [ngClass]="getContractDaysClass(row)">
+              {{ formatContractDays(row) }}
+            </span>
+          </div>
+          } @else {
+          {{ display(row, c) }}
+          }
         </td>
+        }
       </tr>
     </ng-template>
 
