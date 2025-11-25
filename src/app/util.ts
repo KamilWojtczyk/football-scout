@@ -78,43 +78,6 @@ export function fmt(val: any, colKey: string): string {
   return String(val);
 }
 
-/** Enhanced contract display with status indicators */
-export function fmtContract(iso?: string | null): {
-  text: string;
-  status: 'expired' | 'expiring' | 'ok' | null;
-} {
-  if (!iso) return { text: '—', status: null };
-
-  const days = daysLeftFromIso(iso);
-  if (days == null) return { text: iso, status: null };
-
-  let status: 'expired' | 'expiring' | 'ok';
-  let text: string;
-
-  if (days <= 0) {
-    status = 'expired';
-    text = `${iso} (Expired)`;
-  } else if (days <= 180) {
-    status = 'expiring';
-    text = `${iso} (${days}d)`;
-  } else if (days <= 365) {
-    status = 'expiring';
-    const months = Math.floor(days / 30);
-    text = `${iso} (${months}mo)`;
-  } else {
-    status = 'ok';
-    const years = Math.floor(days / 365);
-    const months = Math.floor((days % 365) / 30);
-    if (months > 0) {
-      text = `${iso} (${years}y ${months}mo)`;
-    } else {
-      text = `${iso} (${years}y)`;
-    }
-  }
-
-  return { text, status };
-}
-
 export function fmtHeight(cm?: number | null): string {
   if (!isNum(cm) || cm === 0) return '—';
   const meters = cm / 100;
@@ -124,4 +87,19 @@ export function fmtHeight(cm?: number | null): string {
 export function fmtAge(age?: number | null): string {
   if (!isNum(age)) return '—';
   return `${age}`;
+}
+
+export function contractDaysLeftClass(days: number | null): string {
+  if (days === null || days === 0) return 'contract-band-dg'; // No contract / 0 days
+  if (days < 0) return 'contract-band-dg'; // Expired
+  if (days < 183) return 'contract-band-g'; // < 0.5 year (183 days)
+  if (days < 365) return 'contract-band-lg'; // < 1 year
+  if (days < 548) return 'contract-band-y'; // < 1.5 years (548 days)
+  if (days < 730) return 'contract-band-o'; // < 2 years (730 days)
+  return 'contract-band-r'; // > 2 years
+}
+
+export function formatDaysLeft(days: number | null): string {
+  if (days === null) return '—';
+  return `${days}`;
 }

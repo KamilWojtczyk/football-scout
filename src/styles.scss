@@ -63,6 +63,13 @@ app-root {
   overflow: hidden;
 }
 
+app-players-list {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+}
+
 router-outlet {
   display: none;
 }
@@ -128,7 +135,7 @@ router-outlet {
   flex-wrap: wrap;
 }
 
-/* ==================== FORM CONTROLS - COMPACT ==================== */
+/* ==================== FORM CONTROLS ==================== */
 .p-input-icon-left {
   i {
     color: var(--text-tertiary);
@@ -181,7 +188,7 @@ router-outlet {
   }
 }
 
-/* ==================== PRIMENG DROPDOWN PANEL ==================== */
+/* ==================== DROPDOWN PANEL ==================== */
 .p-select-overlay {
   background: var(--bg-tertiary);
   border: 1px solid var(--border-color);
@@ -209,28 +216,12 @@ router-outlet {
   font-size: 0.75rem;
 }
 
-.text-center {
-  text-align: center;
+.mb-0 {
+  margin-bottom: 0;
 }
 
-.text-right {
-  text-align: right;
-}
-
-.text-left {
-  text-align: left;
-}
-
-.font-bold {
-  font-weight: 600;
-}
-
-.text-sm {
-  font-size: 0.75rem;
-}
-
-.text-xs {
-  font-size: 0.7rem;
+.mb-3 {
+  margin-bottom: 0.75rem;
 }
 
 /* ==================== RESPONSIVE ==================== */

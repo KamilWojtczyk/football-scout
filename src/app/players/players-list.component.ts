@@ -10,10 +10,17 @@ import { SelectModule } from 'primeng/select';
 
 import { DataService } from '../data.service';
 import { Manifest, ManifestTab, PlayerRow, ColumnSpec } from '../types';
-import { fmt, fmtContract, fmtHeight, isNum } from '../util';
+import {
+  fmt,
+  fmtHeight,
+  isNum,
+  daysLeftFromIso,
+  contractDaysLeftClass,
+  formatDaysLeft,
+} from '../util';
 
 type ColMeta = ColumnSpec & {
-  kind: 'name' | 'percent' | 'physical' | 'text' | 'money' | 'contract' | 'numeric' | 'height';
+  kind: 'name' | 'percent' | 'physical' | 'text' | 'money' | 'contract_days' | 'numeric' | 'height';
 };
 
 @Component({
@@ -68,6 +75,7 @@ export class PlayersListComponent implements OnInit, OnDestroy {
   }
 
   private classify(col: ColumnSpec): ColMeta['kind'] {
+    if (col.key === 'contract_days_left') return 'contract_days';
     if (col.sticky || col.key === 'player_name') return 'name';
     if (
       col.key === 'market_value' ||
@@ -75,7 +83,6 @@ export class PlayersListComponent implements OnInit, OnDestroy {
       col.key === 'value_for_money'
     )
       return 'money';
-    if (col.key === 'contract_expires') return 'contract';
     if (col.key === 'height') return 'height';
     if (col.banding === 'fixed') return 'percent';
     if (col.banding === 'percentile') return 'physical';
@@ -84,12 +91,37 @@ export class PlayersListComponent implements OnInit, OnDestroy {
   }
 
   private buildColumns(tab: ManifestTab, sample: PlayerRow[]) {
-    this.cols = tab.columns
-      .filter((c) => c.key !== 'tm_url' || c.sticky)
+    let cols = tab.columns
+      .filter((c) => (c.key !== 'tm_url' && c.key !== 'contract_expires') || c.sticky)
       .map((c) => ({
         ...c,
         kind: this.classify(c),
       }));
+
+    // Find if we have contract_expires data in the rows
+    const hasContractExpires = sample.length > 0 && 'contract_expires' in sample[0];
+
+    // If contract_expires exists in data, add days left column before market_value
+    if (hasContractExpires) {
+      const marketValueIndex = cols.findIndex((c) => c.key === 'market_value');
+      const insertIndex = marketValueIndex >= 0 ? marketValueIndex : cols.length;
+
+      // Create synthetic column for days left
+      const daysLeftCol: ColMeta = {
+        key: 'contract_days_left',
+        label: 'Contract Days Left',
+        type: 'number',
+        kind: 'contract_days',
+        banding: null,
+        percentiles: null,
+        sticky: false,
+        link_key: null,
+      };
+
+      cols.splice(insertIndex, 0, daysLeftCol);
+    }
+
+    this.cols = cols;
   }
 
   private loadTab(name: string) {
@@ -102,6 +134,17 @@ export class PlayersListComponent implements OnInit, OnDestroy {
     this.data.getTab(tab.file).subscribe({
       next: (rows) => {
         this.rows = rows || [];
+
+        // Calculate contract_days_left for each row and add it to the row data
+        this.rows.forEach((row) => {
+          if (row['contract_expires']) {
+            const days = daysLeftFromIso(row['contract_expires']);
+            row['contract_days_left'] = days;
+          } else {
+            row['contract_days_left'] = null;
+          }
+        });
+
         this.buildColumns(tab, this.rows);
         this.loading = false;
       },
@@ -118,10 +161,6 @@ export class PlayersListComponent implements OnInit, OnDestroy {
 
     if (col.sticky) {
       classes.push('sticky-name');
-    }
-
-    if (col.kind === 'numeric' || col.kind === 'money') {
-      classes.push('numeric-cell');
     }
 
     if (col.kind === 'physical') {
@@ -177,57 +216,32 @@ export class PlayersListComponent implements OnInit, OnDestroy {
     return value.toFixed(0);
   }
 
-  /** Get contract status class */
-  contractStatusClass(row: PlayerRow): string {
-    const contractValue = row['contract_expires'];
-    if (!contractValue) return '';
+  /** Get contract days left */
+  getContractDaysLeft(row: PlayerRow): number | null {
+    return row['contract_days_left'] ?? null;
+  }
 
-    const result = fmtContract(contractValue);
-    if (result.status === 'expired') return 'contract-expired';
-    if (result.status === 'expiring') return 'contract-expiring';
-    if (result.status === 'ok') return 'contract-ok';
+  /** Get contract days class for color-coding */
+  getContractDaysClass(row: PlayerRow): string {
+    const days = this.getContractDaysLeft(row);
+    return contractDaysLeftClass(days);
+  }
 
-    return '';
+  /** Format contract days - just show the number */
+  formatContractDays(row: PlayerRow): string {
+    const days = this.getContractDaysLeft(row);
+    return formatDaysLeft(days);
   }
 
   /** Display value with formatting */
   display(row: PlayerRow, col: ColMeta): string {
     const value = row[col.key];
 
-    if (col.kind === 'contract') {
-      const result = fmtContract(value);
-      return result.text;
-    }
-
     if (col.kind === 'height') {
       return fmtHeight(value);
     }
 
     return fmt(value, col.key);
-  }
-
-  /** Get header text alignment */
-  getHeaderAlign(col: ColMeta): string {
-    if (
-      col.kind === 'numeric' ||
-      col.kind === 'money' ||
-      col.kind === 'physical' ||
-      col.kind === 'percent'
-    ) {
-      return 'center';
-    }
-    return 'left';
-  }
-
-  /** Get cell text alignment */
-  getCellAlign(col: ColMeta): string {
-    if (col.kind === 'numeric' || col.kind === 'money') {
-      return 'right';
-    }
-    if (col.kind === 'physical' || col.kind === 'percent') {
-      return 'center';
-    }
-    return 'left';
   }
 
   /** Get Transfermarkt link */

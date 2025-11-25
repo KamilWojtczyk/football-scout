@@ -23,7 +23,6 @@
     [resizableColumns]="true"
     [columnResizeMode]="'expand'"
     [sortMode]="'multiple'"
-    [responsiveLayout]="'stack'"
   >
     <!-- Header -->
     <ng-template pTemplate="header">
@@ -33,9 +32,8 @@
           pResizableColumn
           [pSortableColumn]="c.key"
           [ngClass]="{ 'sticky-name': c.sticky }"
-          [style.text-align]="getHeaderAlign(c)"
         >
-          <div class="flex align-items-center gap-1" [style.justify-content]="getHeaderAlign(c)">
+          <div class="flex align-items-center gap-1 justify-content-center">
             <span>{{ c.label }}</span>
             <p-sortIcon [field]="c.key"></p-sortIcon>
           </div>
@@ -65,11 +63,7 @@
     <!-- Body -->
     <ng-template pTemplate="body" let-row>
       <tr>
-        <td
-          *ngFor="let c of cols"
-          [ngClass]="getCellClasses(row, c)"
-          [style.text-align]="getCellAlign(c)"
-        >
+        <td *ngFor="let c of cols" [ngClass]="getCellClasses(row, c)">
           <!-- Player name with link -->
           <ng-container *ngIf="c.kind === 'name'">
             <a
@@ -101,11 +95,13 @@
             </div>
           </ng-container>
 
-          <!-- Contract with status -->
-          <ng-container *ngIf="c.kind === 'contract'">
-            <span [ngClass]="contractStatusClass(row)">
-              {{ display(row, c) }}
-            </span>
+          <!-- Contract days left badges -->
+          <ng-container *ngIf="c.kind === 'contract_days'">
+            <div class="badge-cell">
+              <span class="score-badge" [ngClass]="getContractDaysClass(row)">
+                {{ formatContractDays(row) }}
+              </span>
+            </div>
           </ng-container>
 
           <!-- Regular cells -->
@@ -114,7 +110,7 @@
               c.kind !== 'name' &&
               c.kind !== 'percent' &&
               c.kind !== 'physical' &&
-              c.kind !== 'contract'
+              c.kind !== 'contract_days'
             "
           >
             {{ display(row, c) }}
