@@ -3,19 +3,49 @@
     <p-select
       [options]="tabs"
       optionLabel="name"
-      optionValue="name"
       [(ngModel)]="selectedTabName"
       (onChange)="onTabChange()"
       placeholder="Select position"
       [style]="{ minWidth: '10rem' }"
     ></p-select>
+
+    <p-button
+      icon="pi pi-filter"
+      [label]="'Filters'"
+      [outlined]="true"
+      severity="secondary"
+      (onClick)="toggleFilterPanel()"
+      [badge]="getActiveFilterCount() > 0 ? getActiveFilterCount().toString() : undefined"
+      badgeSeverity="info"
+    ></p-button>
+
+    @if (getActiveFilterCount() > 0) {
+    <p-button
+      icon="pi pi-times"
+      label="Clear All"
+      [text]="true"
+      severity="secondary"
+      (onClick)="clearAdvancedFilters()"
+    ></p-button>
+    }
   </div>
 </p-toolbar>
+
+@if (getFilterChips().length > 0) {
+<div class="filter-chips">
+  @for (chip of getFilterChips(); track chip.key) {
+  <span class="filter-chip">
+    {{ chip.label }}
+    <i class="pi pi-times" (click)="removeFilter(chip.key)"></i>
+  </span>
+  }
+</div>
+}
 
 <div class="tbl-wrap">
   <p-table
     #dt
-    [value]="rows"
+    [value]="filteredRows"
     [loading]="loading"
     [paginator]="true"
     [rows]="50"
@@ -34,26 +64,6 @@
             <span>{{ c.label }}</span>
             <p-sortIcon [field]="c.key"></p-sortIcon>
           </div>
-
-          <!-- Per-column filter -->
-          <p-columnFilter
-            [field]="c.key"
-            [showMenu]="false"
-            [matchMode]="'contains'"
-            [display]="'row'"
-          >
-            <ng-template pTemplate="filter" let-value let-filter="filterCallback">
-              <input
-                type="text"
-                pInputText
-                [value]="value"
-                (click)="$event.stopPropagation()"
-                (input)="filter($any($event.target).value)"
-                placeholder="Filter"
-                class="p-column-filter-input"
-              />
-            </ng-template>
-          </p-columnFilter>
         </th>
         }
       </tr>
@@ -122,3 +132,82 @@
     </ng-template>
   </p-table>
 </div>
+
+<p-drawer
+  [(visible)]="showFilterPanel"
+  position="right"
+  [style]="{ width: '400px' }"
+  [modal]="false"
+>
+  <ng-template pTemplate="header">
+    <div class="filter-header">
+      <i class="pi pi-filter"></i>
+      <span>Advanced Filters</span>
+    </div>
+  </ng-template>
+
+  <div class="filter-content">
+    @for (c of cols; track c.key) {
+    <div class="filter-group">
+      <label class="filter-label">
+        {{ c.label }}
+      </label>
+
+      <!-- Foot / preferred foot -->
+      @if (isFootColumn(c)) {
+      <p-select
+        [options]="footOptions"
+        [(ngModel)]="advancedFilters.select[c.key]"
+        (onChange)="applyAdvancedFilters()"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="All"
+        [style]="{ width: '100%' }"
+      ></p-select>
+
+      <!-- Numeric / score / height / contract days / value -->
+      } @else if (isNumericColumn(c)) {
+      <div class="range-inputs">
+        <p-inputNumber
+          [(ngModel)]="advancedFilters.numeric[c.key].min"
+          (ngModelChange)="applyAdvancedFilters()"
+          [showButtons]="false"
+          placeholder="Min"
+        ></p-inputNumber>
+        <span class="range-separator">to</span>
+        <p-inputNumber
+          [(ngModel)]="advancedFilters.numeric[c.key].max"
+          (ngModelChange)="applyAdvancedFilters()"
+          [showButtons]="false"
+          placeholder="Max"
+        ></p-inputNumber>
+      </div>
+
+      <!-- Name, club, league, nationality, etc. -->
+      } @else {
+      <input
+        type="text"
+        pInputText
+        [(ngModel)]="advancedFilters.text[c.key]"
+        (ngModelChange)="applyAdvancedFilters()"
+        [placeholder]="'Search ' + c.label.toLowerCase() + '...'"
+        class="w-full"
+      />
+      }
+    </div>
+    }
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="filter-footer">
+      <p-button
+        label="Clear All"
+        icon="pi pi-times"
+        [outlined]="true"
+        severity="secondary"
+        (onClick)="clearAdvancedFilters()"
+        [style]="{ width: '100%' }"
+      ></p-button>
+    </div>
+  </ng-template>
+</p-drawer>

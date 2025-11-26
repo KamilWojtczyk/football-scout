@@ -182,7 +182,8 @@ router-outlet {
     border-color: var(--accent-primary);
   }
 
-  &:focus {
+  &:focus,
+  &.p-focus {
     border-color: var(--accent-primary);
     box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
   }
@@ -203,7 +204,8 @@ router-outlet {
       background: var(--bg-hover);
     }
 
-    &.p-select-option-selected {
+    &.p-select-option-selected,
+    &.p-focus {
       background: var(--accent-primary);
       color: white;
     }

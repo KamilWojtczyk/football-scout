@@ -7,9 +7,19 @@ import { InputTextModule } from 'primeng/inputtext';
 import { Table, TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { SelectModule } from 'primeng/select';
+import { ButtonModule } from 'primeng/button';
+import { DrawerModule } from 'primeng/drawer';
+import { InputNumberModule } from 'primeng/inputnumber';
 
 import { DataService } from '../data.service';
-import { Manifest, ManifestTab, PlayerRow, ColumnSpec } from '../types';
+import {
+  Manifest,
+  ManifestTab,
+  PlayerRow,
+  ColumnSpec,
+  AdvancedFilters,
+  NumericFilter,
+} from '../types';
 import {
   fmt,
   fmtHeight,
@@ -34,20 +44,57 @@ type ColMeta = ColumnSpec & {
     TableModule,
     TagModule,
     SelectModule,
+    ButtonModule,
+    DrawerModule,
+    InputNumberModule,
   ],
   templateUrl: './players-list.component.html',
   styleUrls: ['./players-list.component.scss'],
 })
 export class PlayersListComponent implements OnInit, OnDestroy {
   @ViewChild('dt') dt!: Table;
+
   manifest: Manifest | null = null;
   tabs: ManifestTab[] = [];
   selectedTabName: string | null = null;
 
   loading = false;
-
   rows: PlayerRow[] = [];
+  filteredRows: PlayerRow[] = [];
   cols: ColMeta[] = [];
+
+  // Filter panel
+  showFilterPanel = false;
+
+  advancedFilters: AdvancedFilters = {
+    text: {},
+    numeric: {},
+    select: {},
+  };
+
+  // Foot options
+  footOptions = [
+    { label: 'Both', value: null },
+    { label: 'Left', value: 'Left' },
+    { label: 'Right', value: 'Right' },
+  ];
+
+  private numericKinds = new Set<ColMeta['kind']>([
+    'numeric',
+    'money',
+    'percent',
+    'physical',
+    'contract_days',
+    'height',
+  ]);
+
+  isNumericColumn(col: ColMeta): boolean {
+    return this.numericKinds.has(col.kind);
+  }
+
+  isFootColumn(col: ColMeta): boolean {
+    return col.key === 'foot' || col.key === 'foot_17';
+  }
 
   constructor(private data: DataService) {}
 
@@ -70,7 +117,10 @@ export class PlayersListComponent implements OnInit, OnDestroy {
   ngOnDestroy() {}
 
   onTabChange() {
-    if (this.selectedTabName) this.loadTab(this.selectedTabName);
+    if (this.selectedTabName) {
+      this.clearAdvancedFilters();
+      this.loadTab(this.selectedTabName);
+    }
   }
 
   private classify(col: ColumnSpec): ColMeta['kind'] {
@@ -121,6 +171,7 @@ export class PlayersListComponent implements OnInit, OnDestroy {
     }
 
     this.cols = cols;
+    this.resetAdvancedFiltersStructure();
   }
 
   private loadTab(name: string) {
@@ -143,12 +194,129 @@ export class PlayersListComponent implements OnInit, OnDestroy {
         });
 
         this.buildColumns(tab, this.rows);
+        this.applyAdvancedFilters();
         this.loading = false;
       },
       error: (err) => {
         this.loading = false;
       },
     });
+  }
+
+  /** Toggle filter panel */
+  toggleFilterPanel() {
+    this.showFilterPanel = !this.showFilterPanel;
+  }
+
+  applyAdvancedFilters() {
+    const { text, numeric, select } = this.advancedFilters;
+
+    this.filteredRows = this.rows.filter((row) => {
+      for (const col of this.cols) {
+        const key = col.key;
+
+        // Select filters (e.g. foot)
+        const selVal = select[key];
+        if (selVal != null) {
+          const raw = row[key];
+          if (raw !== selVal) return false;
+        }
+
+        // Numeric filters (min/max)
+        const nf = numeric[key];
+        if (nf && (nf.min != null || nf.max != null)) {
+          const raw = row[key];
+          const num = typeof raw === 'number' ? raw : raw == null ? null : Number(raw);
+
+          if (num == null || Number.isNaN(num)) return false;
+          if (nf.min != null && num < nf.min) return false;
+          if (nf.max != null && num > nf.max) return false;
+        }
+
+        // Text filters (contains, case-insensitive)
+        const tf = text[key];
+        if (tf && tf.trim()) {
+          const needle = tf.trim().toLowerCase();
+          const raw = row[key];
+          const valueStr = (raw ?? '').toString().toLowerCase();
+          if (!valueStr.includes(needle)) return false;
+        }
+      }
+
+      return true;
+    });
+  }
+
+  private resetAdvancedFiltersStructure() {
+    const text: Record<string, string> = {};
+    const numeric: Record<string, NumericFilter> = {};
+    const select: Record<string, any | null> = {};
+
+    for (const c of this.cols) {
+      if (this.isNumericColumn(c)) {
+        numeric[c.key] = { min: null, max: null };
+      } else if (this.isFootColumn(c)) {
+        select[c.key] = null;
+      } else {
+        text[c.key] = '';
+      }
+    }
+
+    this.advancedFilters = { text, numeric, select };
+  }
+
+  clearAdvancedFilters() {
+    this.resetAdvancedFiltersStructure();
+    this.applyAdvancedFilters();
+  }
+
+  removeFilter(filterKey: string) {
+    if (this.advancedFilters.text[filterKey] !== undefined) {
+      this.advancedFilters.text[filterKey] = '';
+    }
+    if (this.advancedFilters.numeric[filterKey] !== undefined) {
+      this.advancedFilters.numeric[filterKey] = { min: null, max: null };
+    }
+    if (this.advancedFilters.select[filterKey] !== undefined) {
+      this.advancedFilters.select[filterKey] = null;
+    }
+    this.applyAdvancedFilters();
+  }
+
+  getActiveFilterCount(): number {
+    return this.getFilterChips().length;
+  }
+
+  getFilterChips(): { key: string; label: string }[] {
+    const chips: { key: string; label: string }[] = [];
+
+    for (const col of this.cols) {
+      const key = col.key;
+      const labelBase = col.label;
+
+      const tf = this.advancedFilters.text[key];
+      if (tf && tf.trim()) {
+        chips.push({ key, label: `${labelBase}: "${tf.trim()}"` });
+        continue;
+      }
+
+      const nf = this.advancedFilters.numeric[key];
+      if (nf && (nf.min != null || nf.max != null)) {
+        let label = `${labelBase}: `;
+        if (nf.min != null && nf.max != null) label += `${nf.min} – ${nf.max}`;
+        else if (nf.min != null) label += `≥ ${nf.min}`;
+        else if (nf.max != null) label += `≤ ${nf.max}`;
+        chips.push({ key, label });
+        continue;
+      }
+
+      const sel = this.advancedFilters.select[key];
+      if (sel != null) {
+        chips.push({ key, label: `${labelBase}: ${sel}` });
+      }
+    }
+
+    return chips;
   }
 
   /** Get cell classes for styling */
@@ -202,7 +370,6 @@ export class PlayersListComponent implements OnInit, OnDestroy {
   formatPhysical(value: any): string {
     if (value == null) return '—';
     if (!isNum(value)) return String(value);
-
     return value.toFixed(2);
   }
 

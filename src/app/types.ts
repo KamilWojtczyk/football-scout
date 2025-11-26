@@ -28,3 +28,14 @@ export type Manifest = {
 };
 
 export type PlayerRow = Record<string, any>;
+
+export interface NumericFilter {
+  min: number | null;
+  max: number | null;
+}
+
+export interface AdvancedFilters {
+  text: Record<string, string>;
+  numeric: Record<string, NumericFilter>;
+  select: Record<string, any | null>;
+}
