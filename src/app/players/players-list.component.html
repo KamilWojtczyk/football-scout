@@ -60,7 +60,13 @@
     <ng-template pTemplate="header">
       <tr>
         @for (c of cols; track c.key) {
-        <th pResizableColumn [pSortableColumn]="c.key" [ngClass]="{ 'sticky-name': c.sticky }">
+        <th
+          pResizableColumn
+          [pSortableColumn]="c.key"
+          [ngClass]="{ 'sticky-name': c.sticky }"
+          [pTooltip]="c.label"
+          tooltipPosition="top"
+        >
           <div class="flex align-items-center gap-1 justify-content-center">
             <span>{{ c.label }}</span>
             <p-sortIcon [field]="c.key"></p-sortIcon>
