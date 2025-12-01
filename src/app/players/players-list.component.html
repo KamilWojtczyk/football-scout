@@ -55,6 +55,10 @@
     [resizableColumns]="true"
     [columnResizeMode]="'expand'"
     [sortMode]="'multiple'"
+    [(selection)]="selectedPlayer"
+    selectionMode="single"
+    (onRowSelect)="onRowSelect($event)"
+    class="p-datatable-sm"
   >
     <!-- Header -->
     <ng-template pTemplate="header">
@@ -72,11 +76,16 @@
 
     <!-- Body -->
     <ng-template pTemplate="body" let-row>
-      <tr>
+      <tr [pSelectableRow]="row">
         @for (c of cols; track c.key) {
         <td [ngClass]="getCellClasses(row, c)">
           @if (c.kind === 'name') { @if (tmLink(row); as url) {
-          <a [href]="url" target="_blank" rel="noopener noreferrer">
+          <a
+            [href]="url"
+            target="_blank"
+            rel="noopener noreferrer"
+            (click)="$event.stopPropagation()"
+          >
             {{ row[c.key] || '—' }}
           </a>
           } @else {

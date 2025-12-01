@@ -1,0 +1,231 @@
+@if (player) {
+<div class="player-overview">
+  <!-- HEADER -->
+  <div class="header-section">
+    <div class="header-top">
+      <button class="back-button" (click)="goBack()">
+        <i class="pi pi-arrow-left"></i>
+        Back to players
+      </button>
+    </div>
+
+    <div class="header-content">
+      <!-- Left: image -->
+      <div class="player-image-wrapper">
+        <img [src]="getPlayerImage(player)" [alt]="player['player_name']" class="player-image" />
+      </div>
+
+      <!-- Middle: basic info -->
+      <div class="player-details">
+        <div class="name-row">
+          <h1>{{ player['player_name'] }}</h1>
+          @if (player['tm_url']) {
+          <a class="tm-badge" [href]="player['tm_url']" target="_blank" rel="noopener noreferrer">
+            <i class="pi pi-external-link"></i>
+            Transfermarkt
+          </a>
+          }
+        </div>
+
+        <div class="subtitle">
+          {{ player['position'] }} · {{ player['club'] }} · {{ player['league'] }}
+        </div>
+
+        <div class="meta-row">
+          @if (player['nationality']) {
+          <span class="pill">
+            <i class="pi pi-flag"></i>
+            {{ player['nationality'] }}
+          </span>
+          } @if (player['age'] != null) {
+          <span class="pill">
+            <i class="pi pi-calendar"></i>
+            {{ player['age'] }} yrs
+          </span>
+          } @if (player['height'] != null) {
+          <span class="pill">
+            <i class="pi pi-arrow-up"></i>
+            {{ player['height'] }} cm
+          </span>
+          } @if (player['foot']) {
+          <span class="pill">
+            <i class="pi pi-directions"></i>
+            {{ player['foot'] }}
+          </span>
+          }
+        </div>
+      </div>
+
+      <!-- Right: value metrics -->
+      <div class="value-metrics">
+        <div class="metric-item">
+          <span class="metric-label">Value for Money</span>
+          <div
+            class="stars"
+            [title]="
+              player['value_for_money'] != null
+                ? (player['value_for_money'] | number : '1.0-0')
+                : ''
+            "
+          >
+            @for (filled of getStarsArray(getStarRating(player['value_for_money'], 'value')); track
+            $index) {
+            <i class="pi" [ngClass]="filled ? 'pi-star-fill' : 'pi-star'"></i>
+            }
+          </div>
+        </div>
+
+        <div class="metric-item">
+          <span class="metric-label">Cost Efficiency</span>
+          <div
+            class="stars"
+            [title]="
+              player['cost_per_point_k'] != null
+                ? (player['cost_per_point_k'] | number : '1.1-1') + ' k€/pt'
+                : ''
+            "
+          >
+            @for (filled of getStarsArray(getStarRating(player['cost_per_point_k'], 'cost')); track
+            $index) {
+            <i class="pi" [ngClass]="filled ? 'pi-star-fill' : 'pi-star'"></i>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GRID -->
+  <div class="grid-container">
+    <!-- GENERAL INFO -->
+    <div class="card general-info">
+      <h2>General Information</h2>
+
+      <div class="info-columns">
+        <!-- Left column: position / club / league / nationality / age -->
+        <div class="info-col">
+          <div class="info-item">
+            <span class="label">Position</span>
+            <span class="value">{{ player['position'] || '—' }}</span>
+          </div>
+
+          <div class="info-item">
+            <span class="label">Club</span>
+            <span class="value">{{ player['club'] || '—' }}</span>
+          </div>
+
+          <div class="info-item">
+            <span class="label">League</span>
+            <span class="value">{{ player['league'] || '—' }}</span>
+          </div>
+
+          <div class="info-item">
+            <span class="label">Nationality</span>
+            <span class="value">{{ player['nationality'] || '—' }}</span>
+          </div>
+
+          <div class="info-item">
+            <span class="label">Age</span>
+            <span class="value">{{ player['age'] ?? '—' }}</span>
+          </div>
+        </div>
+
+        <!-- Right column: foot / height / contract -->
+        <div class="info-col">
+          <div class="info-item">
+            <span class="label">Preferred Foot</span>
+            <span class="value">{{ player['foot'] || '—' }}</span>
+          </div>
+
+          <div class="info-item">
+            <span class="label">Height</span>
+            <span class="value">
+              {{ player['height'] != null ? player['height'] + ' cm' : '—' }}
+            </span>
+          </div>
+
+          <div class="info-item">
+            <span class="label">Market Value</span>
+            <span class="value">
+              {{ player['market_value'] != null ? '€' + (player['market_value'] | number) : '—' }}
+            </span>
+          </div>
+
+          <div class="info-item">
+            <span class="label">Contract Expires</span>
+            <span class="value">
+              {{ player['contract_expires'] || '—' }}
+            </span>
+          </div>
+
+          <div class="info-item">
+            <span class="label">Days to Expiry</span>
+            @if (contractDays !== null) {
+            <span class="score-badge" [ngClass]="contractBadgeClass">
+              {{ contractBadgeLabel }}
+            </span>
+            } @else {
+            <span class="value">—</span>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RADAR CHART -->
+    <div class="card spider-chart">
+      <h2>Position Specific Comparison</h2>
+      <p-chart type="radar" [data]="spiderData" [options]="spiderOptions" height="260px"></p-chart>
+    </div>
+
+    <!-- DEVELOPMENT TREND / PLAYER POTENTIAL -->
+    <div class="card development-trend">
+      <h2>Player Potential</h2>
+      <p-chart type="line" [data]="trendData" [options]="trendOptions" height="260px"></p-chart>
+    </div>
+
+    <!-- PHYSICAL DATA (only non-GK AND only if we have stats) -->
+    @if (!isGoalkeeperTab && physicalCharts.length > 0) {
+    <div class="card physical-data">
+      <h2>Physical Stats vs Position Avg</h2>
+
+      <div class="physical-grid">
+        @for (pc of physicalCharts; track pc.key) {
+        <div class="physical-item">
+          <h3>{{ pc.label }}</h3>
+          <p-chart
+            type="bar"
+            [data]="pc.data"
+            [options]="pc.options"
+            height="160px"
+            [plugins]="[dataLabelPlugin]"
+          ></p-chart>
+        </div>
+        }
+      </div>
+    </div>
+    }
+
+    <!-- ROBUSTNESS -->
+    <div class="card robustness">
+      <h2>Robustness</h2>
+      <div class="placeholder-content">
+        <p>Coming soon</p>
+      </div>
+    </div>
+
+    <!-- INJURY HISTORY -->
+    <div class="card injury-history">
+      <h2>Injury History</h2>
+      <div class="placeholder-content">
+        <p>Coming soon</p>
+      </div>
+    </div>
+  </div>
+</div>
+} @else {
+<div class="loading-state">
+  <i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>
+  <p>Loading player data...</p>
+</div>
+}
