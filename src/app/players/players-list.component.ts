@@ -11,6 +11,7 @@ import { SelectModule } from 'primeng/select';
 import { ButtonModule } from 'primeng/button';
 import { DrawerModule } from 'primeng/drawer';
 import { InputNumberModule } from 'primeng/inputnumber';
+import { TooltipModule } from 'primeng/tooltip';
 
 import { DataService } from '../data.service';
 import {
@@ -47,6 +48,7 @@ type ColMeta = ColumnSpec & {
     SelectModule,
     ButtonModule,
     DrawerModule,
+    TooltipModule,
     InputNumberModule,
   ],
   templateUrl: './players-list.component.html',
