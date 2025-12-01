@@ -1,5 +1,5 @@
 import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -100,19 +100,34 @@ export class PlayersListComponent implements OnInit, OnDestroy {
     return col.key === 'foot' || col.key === 'foot_17';
   }
 
-  constructor(private data: DataService, private router: Router) {}
+  constructor(private data: DataService, private router: Router, private route: ActivatedRoute) {}
 
   ngOnInit() {
     this.loading = true;
+
     this.data.getManifest().subscribe({
       next: (m) => {
         this.manifest = m;
         this.tabs = m.tabs ?? [];
+
+        const tabFromQuery = this.route.snapshot.queryParamMap.get('tab');
+
+        const fromQuery =
+          tabFromQuery && this.tabs.some((t) => t.name === tabFromQuery) ? tabFromQuery : null;
+
         this.selectedTabName =
-          this.tabs.find((t) => t.name === 'Goalkeeper')?.name || this.tabs[0]?.name || null;
-        if (this.selectedTabName) this.loadTab(this.selectedTabName);
+          fromQuery ||
+          this.tabs.find((t) => t.name === 'Goalkeeper')?.name ||
+          this.tabs[0]?.name ||
+          null;
+
+        if (this.selectedTabName) {
+          this.loadTab(this.selectedTabName);
+        } else {
+          this.loading = false;
+        }
       },
-      error: (err) => {
+      error: () => {
         this.loading = false;
       },
     });
@@ -145,7 +160,17 @@ export class PlayersListComponent implements OnInit, OnDestroy {
 
   private buildColumns(tab: ManifestTab, sample: PlayerRow[]) {
     let cols = tab.columns
-      .filter((c) => (c.key !== 'tm_url' && c.key !== 'contract_expires' && c.key !== 'club' && c.key !== 'league' && c.key !== 'position' && c.key !== 'nationality' && c.key !== 'image_url') || c.sticky)
+      .filter(
+        (c) =>
+          (c.key !== 'tm_url' &&
+            c.key !== 'contract_expires' &&
+            c.key !== 'club' &&
+            c.key !== 'league' &&
+            c.key !== 'position' &&
+            c.key !== 'nationality' &&
+            c.key !== 'image_url') ||
+          c.sticky
+      )
       .map((c) => ({
         ...c,
         kind: this.classify(c),

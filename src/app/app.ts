@@ -9,9 +9,4 @@ import { HeaderComponent } from './header/header.component';
   imports: [RouterOutlet, MenubarModule, HeaderComponent],
   templateUrl: 'app.html',
 })
-export class App {
-  items = [
-    { label: 'Players List', routerLink: '/players', icon: 'pi pi-users', active: true },
-    { label: 'Squad Planning', routerLink: '/squad', icon: 'pi pi-sitemap' },
-  ];
-}
+export class App {}

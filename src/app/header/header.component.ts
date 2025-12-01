@@ -2,9 +2,14 @@ import { Component } from '@angular/core';
 import { Manifest } from '../types';
 import { DataService } from '../data.service';
 
+import { Router, RouterModule } from '@angular/router';
+import { TooltipModule } from 'primeng/tooltip';
+import { CommonModule } from '@angular/common';
+
 @Component({
   standalone: true,
   selector: 'app-header',
+  imports: [CommonModule, RouterModule, TooltipModule],
   templateUrl: 'header.component.html',
   styleUrls: ['./header.component.scss'],
 })
@@ -12,7 +17,7 @@ export class HeaderComponent {
   manifest: Manifest | null = null;
   loading = false;
 
-  constructor(private data: DataService) {}
+  constructor(private data: DataService, public router: Router) {}
 
   ngOnInit() {
     this.loading = true;

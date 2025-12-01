@@ -1,11 +1,30 @@
 <header class="app-header">
-  <h1 class="app-title">
-    <i class="pi pi-users"></i>
-    Football Scout
-  </h1>
+  <div class="header-left">
+    <h1 class="app-title">
+      <div class="logo-icon">
+        <i class="pi pi-users"></i>
+      </div>
+      <span class="title-text">Football Scout</span>
+    </h1>
+  </div>
+
   <nav class="app-nav">
-    @if (manifest?.updated_at) {
-    <span class="text-500"> <i class="pi pi-clock"></i> {{ formattedUpdateDate }} </span>
-    }
+    <a routerLink="/players" routerLinkActive="active" class="nav-item">
+      <i class="pi pi-users"></i>
+      <span>Players</span>
+    </a>
+    <a routerLink="/squad" routerLinkActive="active" class="nav-item">
+      <i class="pi pi-th-large"></i>
+      <span>Squad</span>
+    </a>
   </nav>
+
+  <div class="header-right">
+    @if (manifest?.updated_at) {
+    <div class="data-status" pTooltip="Last data update" tooltipPosition="left">
+      <i class="pi pi-database"></i>
+      <span>{{ formattedUpdateDate }}</span>
+    </div>
+    }
+  </div>
 </header>

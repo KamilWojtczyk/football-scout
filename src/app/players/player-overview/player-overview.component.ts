@@ -84,7 +84,7 @@ export class PlayerOverviewComponent implements OnInit {
               if (!tab) {
                 throw new Error(`Tab ${this.tabName} not found`);
               }
-
+              console.log(tab);
               return this.dataService
                 .getTab(tab.file)
                 .pipe(map((rows) => ({ rows, tab, playerName })));
@@ -110,7 +110,7 @@ export class PlayerOverviewComponent implements OnInit {
   }
 
   goBack() {
-    this.router.navigate(['../..'], { relativeTo: this.route });
+    this.router.navigate(['/players'], { queryParams: { tab: this.tabName } });
   }
 
   private initContractMeta() {
@@ -119,8 +119,6 @@ export class PlayerOverviewComponent implements OnInit {
     this.contractBadgeClass = contractDaysLeftClass(this.contractDays);
     this.contractBadgeLabel = formatDaysLeft(this.contractDays);
   }
-
-  /* ---------- star ratings ---------- */
 
   private computeQuantiles(field: string): Quantiles | null {
     const values = this.tabRows.map((r) => r[field]).filter((v) => isNum(v)) as number[];
@@ -155,7 +153,6 @@ export class PlayerOverviewComponent implements OnInit {
       const q = this.costQuantiles;
       if (!q) return 0;
       const [q20, q40, q60, q80] = q;
-      // lower is better
       if (value <= q20) return 5;
       if (value <= q40) return 4;
       if (value <= q60) return 3;
@@ -218,11 +215,8 @@ export class PlayerOverviewComponent implements OnInit {
     };
   }
 
-  /* ---------- player potential / development trend ---------- */
-
   private getPositionGroup(): string {
     const tab = (this.tabName || '').toUpperCase();
-    console.log(tab);
     if (tab.includes('KEEPER') || tab.startsWith('GK')) return 'GK';
     if (tab.startsWith('CB')) return 'CB';
     if (tab.startsWith('FB') || tab.includes('FULL')) return 'FB';
@@ -240,20 +234,20 @@ export class PlayerOverviewComponent implements OnInit {
     if (age <= peakStart - 4) return 88;
     if (age < peakStart) {
       const t = (age - (peakStart - 4)) / 4;
-      return 88 + t * 8; // 88 -> 96
+      return 88 + t * 8;
     }
     if (age <= peakEnd) {
       const span = Math.max(1, peakEnd - peakStart);
       const t = (age - peakStart) / span;
-      return 96 + t * 4; // 96 -> 100
+      return 96 + t * 4;
     }
     if (age <= peakEnd + 4) {
       const t = (age - peakEnd) / 4;
-      return 96 - t * 6; // 96 -> 90
+      return 96 - t * 6;
     }
     if (age <= peakEnd + 8) {
       const t = (age - (peakEnd + 4)) / 4;
-      return 90 - t * 8; // 90 -> 82
+      return 90 - t * 8;
     }
     return 80;
   }
@@ -268,7 +262,7 @@ export class PlayerOverviewComponent implements OnInit {
     const sumX2 = xs.reduce((acc, x) => acc + x * x, 0);
     const denom = n * sumX2 - sumX * sumX;
     if (!denom) return 0;
-    return (n * sumXY - sumX * sumY) / denom; // change in rating per season
+    return (n * sumXY - sumX * sumY) / denom;
   }
 
   private initTrendChart(columns: ColumnSpec[]) {
@@ -277,7 +271,6 @@ export class PlayerOverviewComponent implements OnInit {
       return;
     }
 
-    // 1) Find season columns (2023, 2023_24, etc.)
     const yearCols = columns.filter((c) => c.key.match(/^\d{4}(_\d{2})?$/));
     yearCols.sort((a, b) => a.key.localeCompare(b.key));
     if (!yearCols.length) {
@@ -287,7 +280,6 @@ export class PlayerOverviewComponent implements OnInit {
 
     const currentAge = isNum(this.player['age']) ? (this.player['age'] as number) : 26;
 
-    // 2) Build history: approximate age per season + rating
     const histAges: number[] = [];
     const histVals: number[] = [];
     const nYears = yearCols.length;
@@ -295,13 +287,12 @@ export class PlayerOverviewComponent implements OnInit {
     yearCols.forEach((c, idx) => {
       const v = this.player?.[c.key];
       if (!isNum(v)) return;
-      const approxAge = currentAge - (nYears - 1 - idx); // last season ~ currentAge
+      const approxAge = currentAge - (nYears - 1 - idx);
       histAges.push(approxAge);
       histVals.push(v as number);
     });
 
     if (!histVals.length) {
-      // Fallback: no history at all -> just draw a flat potential curve at base
       const group = this.getPositionGroup();
       const minAge = Math.max(16, currentAge - 2);
       const maxAge = Math.min(40, currentAge + 10);
@@ -311,7 +302,7 @@ export class PlayerOverviewComponent implements OnInit {
       const baseCurrent = this.basePotential(currentAge, group);
       const potentialData = labels.map((age) => {
         const base = this.basePotential(age, group);
-        let val = base + (baseCurrent - base); // just in case
+        let val = base + (baseCurrent - base);
         val = Math.max(70, Math.min(99, val));
         return val;
       });
@@ -356,7 +347,6 @@ export class PlayerOverviewComponent implements OnInit {
       return;
     }
 
-    // 3) Map age -> value for easy lookup
     const histMap = new Map<number, number>();
     histAges.forEach((age, i) => histMap.set(age, histVals[i]));
 
@@ -364,34 +354,26 @@ export class PlayerOverviewComponent implements OnInit {
     const lastVal = histVals[histVals.length - 1];
 
     const group = this.getPositionGroup();
-    const slope = this.computeTrendSlope(histVals); // change per season ~ per year
+    const slope = this.computeTrendSlope(histVals);
 
-    // 4) Age range: from first historical age to ~10 years ahead
     const minAge = histAges[0];
     const maxAge = Math.min(40, lastAge + 10);
     const labels: number[] = [];
     for (let age = minAge; age <= maxAge; age++) labels.push(age);
 
-    // 5) Build potential line:
-    //    - for ages with history -> exact values
-    //    - between them -> linear interpolation
-    //    - beyond lastAge -> positional age curve + shift + tilt
     const potentialData: number[] = [];
 
     const baseLast = this.basePotential(lastAge, group);
     const shift = lastVal - baseLast;
-    const tilt = Math.max(-1.5, Math.min(1.5, slope)); // limit extreme trends
+    const tilt = Math.max(-1.5, Math.min(1.5, slope));
 
     for (const age of labels) {
       let val: number;
 
       if (age <= lastAge) {
-        // Inside historical window
         if (histMap.has(age)) {
-          // exact season
           val = histMap.get(age)!;
         } else {
-          // between seasons -> linear interpolation
           let prevIdx = -1;
           let nextIdx = -1;
           for (let i = 0; i < histAges.length; i++) {
@@ -403,7 +385,6 @@ export class PlayerOverviewComponent implements OnInit {
           }
 
           if (prevIdx === -1 || nextIdx === -1) {
-            // outside range for some reason -> clamp to nearest
             val = prevIdx === -1 ? histVals[0] : histVals[histVals.length - 1];
           } else {
             const prevAge = histAges[prevIdx];
@@ -415,31 +396,22 @@ export class PlayerOverviewComponent implements OnInit {
           }
         }
       } else {
-        // ---------- FUTURE AGES: NEW LOGIC ----------
         const base = this.basePotential(age, group);
         const yearsFromLast = age - lastAge;
 
-        // shift & trend are important near now, but they fade with time
-        const wShift = Math.max(0, 1 - yearsFromLast / 6); // after ~6 yrs shift ~ 0
-        const wTrend = Math.max(0, 1 - yearsFromLast / 4); // after ~4 yrs trend ~ 0
+        const wShift = Math.max(0, 1 - yearsFromLast / 6);
+        const wTrend = Math.max(0, 1 - yearsFromLast / 4);
 
-        // extra age decay after 2 years (forces decline even if base is flat)
         const extraAgePenalty = Math.max(0, yearsFromLast - 2) * 0.7;
 
-        val =
-          base + // positional age curve (main shape)
-          shift * wShift + // personal level realism near "now"
-          tilt * yearsFromLast * wTrend - // recent trend, fades out
-          extraAgePenalty; // ageing drop
+        val = base + shift * wShift + tilt * yearsFromLast * wTrend - extraAgePenalty;
 
-        // clamp: realistic range & never 100
         val = Math.max(70, Math.min(99, val));
       }
 
       potentialData.push(val);
     }
 
-    // 6) Actual points aligned on same age axis (for dots only)
     const actualSeries = new Array(labels.length).fill(null) as (number | null)[];
     labels.forEach((age, idx) => {
       if (histMap.has(age)) {
@@ -447,7 +419,6 @@ export class PlayerOverviewComponent implements OnInit {
       }
     });
 
-    // 7) Y-axis bounds with gap underneath
     const allVals = [...potentialData, ...histVals];
     const minVal = Math.min(...allVals);
     const maxVal = Math.max(...allVals);
@@ -481,7 +452,7 @@ export class PlayerOverviewComponent implements OnInit {
     this.trendOptions = {
       maintainAspectRatio: false,
       plugins: {
-        legend: { display: false }, // hide "Potential / Actual OVR"
+        legend: { display: false },
       },
       scales: {
         y: {
@@ -508,8 +479,6 @@ export class PlayerOverviewComponent implements OnInit {
     };
   }
 
-  /* ---------- physical charts (one per stat) ---------- */
-
   private initPhysicalCharts(columns: ColumnSpec[]) {
     this.physicalCharts = [];
 
@@ -525,7 +494,6 @@ export class PlayerOverviewComponent implements OnInit {
     for (const c of physicalCols) {
       const playerVal = isNum(this.player[c.key]) ? (this.player[c.key] as number) : null;
 
-      // if we don't have this stat for the player, skip this metric
       if (!isNum(playerVal)) continue;
 
       const vals = this.tabRows.map((r) => r[c.key]).filter((v) => isNum(v)) as number[];
@@ -610,8 +578,6 @@ export class PlayerOverviewComponent implements OnInit {
       });
     }
   }
-
-  /* ---------- helpers ---------- */
 
   getPlayerImage(player: PlayerRow): string {
     const img = player['image_url'] as string | undefined;
