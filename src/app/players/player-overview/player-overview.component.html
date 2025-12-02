@@ -181,7 +181,7 @@
     <!-- DEVELOPMENT TREND / PLAYER POTENTIAL -->
     <div class="card development-trend">
       <h2>Player Potential</h2>
-      <p-chart type="line" [data]="trendData" [options]="trendOptions" height="260px"></p-chart>
+      <p-chart type="line" [data]="trendData" [options]="trendOptions" [plugins]="trendPlugins" height="260px"></p-chart>
     </div>
 
     <!-- PHYSICAL DATA (only non-GK AND only if we have stats) -->

@@ -43,6 +43,7 @@ export class PlayerOverviewComponent implements OnInit {
 
   trendData: any;
   trendOptions: any;
+  trendPlugins: any[] = [];
 
   physicalCharts: PhysicalChartDef[] = [];
 
@@ -63,6 +64,72 @@ export class PlayerOverviewComponent implements OnInit {
     '9': { peakStart: 27, peakEnd: 30 },
     Other: { peakStart: 26, peakEnd: 30 },
   };
+
+  // Background colors for the chart bands (using rgba for transparency)
+  private readonly BG_COLORS = {
+    DARK_GREEN: 'rgba(74, 222, 128, 0.8)', // --score-90  #4ade80
+    GREEN: 'rgba(134, 239, 172, 0.8)', // --score-80  #86efac
+    YELLOW: 'rgba(251, 191, 36, 0.8)', // --score-70  #fbbf24
+    ORANGE: 'rgba(251, 146, 60, 0.8)', // --score-60  #fb923c
+    RED: 'rgba(248, 113, 113, 0.8)', // --score-50  #f87171
+    DARK_RED: 'rgba(239, 68, 68, 0.8)',
+  };
+
+  private getBandColor(age: number, group: string): string {
+    if (!group) group = 'Other';
+
+    if (group === 'GK') {
+      if (age <= 22) return this.BG_COLORS.DARK_GREEN;
+      if (age <= 24) return this.BG_COLORS.GREEN;
+      if (age <= 26) return this.BG_COLORS.YELLOW;
+      if (age <= 29) return this.BG_COLORS.ORANGE;
+      return this.BG_COLORS.RED;
+    }
+
+    if (group === 'CB') {
+      if (age <= 21) return this.BG_COLORS.DARK_GREEN;
+      if (age <= 23) return this.BG_COLORS.GREEN;
+      if (age <= 25) return this.BG_COLORS.YELLOW;
+      if (age <= 29) return this.BG_COLORS.ORANGE;
+      if (age <= 29) return this.BG_COLORS.RED;
+      return this.BG_COLORS.DARK_RED;
+    }
+
+    if (['6', '8', 'FB'].includes(group)) {
+      if (age <= 19) return this.BG_COLORS.DARK_GREEN;
+      if (age <= 21) return this.BG_COLORS.GREEN;
+      if (age <= 23) return this.BG_COLORS.YELLOW;
+      if (age <= 26) return this.BG_COLORS.ORANGE;
+      if (age <= 28) return this.BG_COLORS.RED;
+      return this.BG_COLORS.DARK_RED;
+    }
+
+    // Midfielders generally similar
+    if (group === '10') {
+      if (age <= 20) return this.BG_COLORS.DARK_GREEN;
+      if (age <= 22) return this.BG_COLORS.GREEN;
+      if (age <= 24) return this.BG_COLORS.YELLOW;
+      if (age <= 27) return this.BG_COLORS.ORANGE;
+      if (age <= 29) return this.BG_COLORS.RED;
+      return this.BG_COLORS.DARK_RED;
+    }
+
+    if (group === '9') {
+      if (age <= 21) return this.BG_COLORS.DARK_GREEN;
+      if (age <= 23) return this.BG_COLORS.GREEN;
+      if (age <= 25) return this.BG_COLORS.YELLOW;
+      if (age <= 28) return this.BG_COLORS.ORANGE;
+      if (age <= 30) return this.BG_COLORS.RED;
+      return this.BG_COLORS.DARK_RED;
+    }
+
+    // Fallback
+    if (age <= 21) return this.BG_COLORS.DARK_GREEN;
+    if (age <= 24) return this.BG_COLORS.GREEN;
+    if (age <= 26) return this.BG_COLORS.YELLOW;
+    if (age <= 29) return this.BG_COLORS.ORANGE;
+    return this.BG_COLORS.RED;
+  }
 
   get isGoalkeeperTab(): boolean {
     return (this.tabName ?? '').toLowerCase().includes('keeper');
@@ -217,13 +284,13 @@ export class PlayerOverviewComponent implements OnInit {
 
   private getPositionGroup(): string {
     const tab = (this.tabName || '').toUpperCase();
-    if (tab.includes('KEEPER') || tab.startsWith('GK')) return 'GK';
+    if (tab.includes('Goalkeeper')) return 'GK';
     if (tab.startsWith('CB')) return 'CB';
-    if (tab.startsWith('FB') || tab.includes('FULL')) return 'FB';
-    if (tab.startsWith('6')) return '6';
-    if (tab.startsWith('8')) return '8';
-    if (tab.startsWith('10') || tab.startsWith('RW') || tab.startsWith('LW')) return '10';
-    if (tab.startsWith('9')) return '9';
+    if (tab.startsWith('FB')) return 'FB';
+    if (tab.startsWith('#6')) return '6';
+    if (tab.startsWith('#8')) return '8';
+    if (tab.startsWith('#10') || tab.startsWith('RW') || tab.startsWith('LW')) return '10';
+    if (tab.startsWith('#9')) return '9';
     return 'Other';
   }
 
@@ -267,20 +334,13 @@ export class PlayerOverviewComponent implements OnInit {
       absoluteCeiling = 99;
     }
 
-    // Influence of current growth rate (if positive)
-    // If they are growing fast, boost the projection slightly
-    // We limit the influence of slope to avoid overreacting to one good season
     const positiveGrowth = Math.max(0, Math.min(5, growthRate));
     const blendedGrowth = (projectedGrowthPerYear * 2 + positiveGrowth) / 3;
 
-    // Calculate projected peak
     const projectedPeak = currentRating + yearsToGrow * blendedGrowth;
 
-    // Apply ceiling
     return Math.min(absoluteCeiling, Math.min(99, projectedPeak));
   }
-
-
 
   private computeTrendSlope(values: number[]): number {
     const n = values.length;
@@ -301,25 +361,39 @@ export class PlayerOverviewComponent implements OnInit {
       return;
     }
 
-    const yearCols = columns.filter((c) => c.key.match(/^\d{4}(_\d{2})?$/));
-    yearCols.sort((a, b) => a.key.localeCompare(b.key));
+    const seasonCols = columns.filter((c) => c.key.match(/^\d{4}(_\d{2})?$/));
 
     const currentAge = isNum(this.player['age']) ? (this.player['age'] as number) : 26;
 
+    const buckets = new Map<number, number[]>();
+
+    for (const c of seasonCols) {
+      const m = c.key.match(/^(\d{4})(?:_(\d{2}))?$/);
+      if (!m) continue;
+
+      const baseYear = parseInt(m[1], 10);
+      const v = this.player?.[c.key];
+      if (!isNum(v)) continue;
+
+      const arr = buckets.get(baseYear) ?? [];
+      arr.push(v as number);
+      buckets.set(baseYear, arr);
+    }
+
+    const years = Array.from(buckets.keys()).sort((a, b) => a - b);
     const histAges: number[] = [];
     const histVals: number[] = [];
-    const nYears = yearCols.length;
 
-    yearCols.forEach((c, idx) => {
-      const v = this.player?.[c.key];
-      if (isNum(v)) {
-        const approxAge = currentAge - (nYears - 1 - idx);
-        histAges.push(approxAge);
-        histVals.push(v as number);
-      }
+    const nYears = years.length;
+    years.forEach((year, idx) => {
+      const vals = buckets.get(year)!;
+      const avg = vals.reduce((a, b) => a + b, 0) / vals.length;
+
+      const approxAge = currentAge - (nYears - 1 - idx);
+      histAges.push(approxAge);
+      histVals.push(avg);
     });
 
-    // If no history, try to use current stats
     if (!histVals.length) {
       const currentRating = isNum(this.player['overall_avg_last_4'])
         ? (this.player['overall_avg_last_4'] as number)
@@ -350,7 +424,6 @@ export class PlayerOverviewComponent implements OnInit {
 
     const potentialData: number[] = [];
 
-    // Calculate realistic maximum ceiling based on current performance
     const cfg = this.ageCurveConfig[group] || this.ageCurveConfig['Other'];
     const peakStart = cfg.peakStart;
     const peakEnd = cfg.peakEnd;
@@ -359,13 +432,12 @@ export class PlayerOverviewComponent implements OnInit {
     const projectedPeak = this.calculateRealisticMaximum(lastVal, lastAge, peakAge, slope);
 
     for (const age of labels) {
-      let val: number;
+      let val: number | null = null;
 
       if (age <= lastAge) {
         if (histMap.has(age)) {
           val = histMap.get(age)!;
         } else {
-          // Interpolate missing history
           let prevIdx = -1;
           let nextIdx = -1;
           for (let i = 0; i < histAges.length; i++) {
@@ -388,37 +460,33 @@ export class PlayerOverviewComponent implements OnInit {
           }
         }
       } else {
-        // Future projection
-        if (age < peakStart) {
-          // Growth phase
-          // Interpolate from lastVal (at lastAge) to projectedPeak (at peakStart)
-          const totalYears = peakStart - lastAge;
-          const yearsPassed = age - lastAge;
-          
-          // If already past peakStart but logic brought us here (shouldn't happen if lastAge >= peakStart)
-          if (totalYears <= 0) {
-             val = projectedPeak;
-          } else {
-             const progress = Math.max(0, Math.min(1, yearsPassed / totalYears));
-             // Ease out curve: fast growth early, slowing down
-             const curve = 1 - Math.pow(1 - progress, 1.5);
-             val = lastVal + (projectedPeak - lastVal) * curve;
-          }
-        } else if (age <= peakEnd) {
-          // Peak phase
-          val = projectedPeak;
-        } else {
-          // Decline phase
-          const yearsPastPeak = age - peakEnd;
-          const declinePerYear = 2.0; // Standard decline
-          val = projectedPeak - yearsPastPeak * declinePerYear;
-        }
+        if (age <= lastAge + 2) {
+          if (age < peakStart) {
+            const totalYears = peakStart - lastAge;
+            const yearsPassed = age - lastAge;
 
-        // Safety clamps
-        val = Math.max(40, Math.min(99, val));
+            if (totalYears <= 0) {
+              val = projectedPeak;
+            } else {
+              const progress = Math.max(0, Math.min(1, yearsPassed / totalYears));
+              const curve = 1 - Math.pow(1 - progress, 1.5); // ease-out
+              val = lastVal + (projectedPeak - lastVal) * curve;
+            }
+          } else if (age <= peakEnd) {
+            val = projectedPeak;
+          } else {
+            const yearsPastPeak = age - peakEnd;
+            const declinePerYear = 2.0;
+            val = projectedPeak - yearsPastPeak * declinePerYear;
+          }
+
+          val = Math.max(40, Math.min(99, val));
+        } else {
+          val = null;
+        }
       }
 
-      potentialData.push(val);
+      potentialData.push(val as any);
     }
 
     const actualSeries = new Array(labels.length).fill(null) as (number | null)[];
@@ -428,12 +496,15 @@ export class PlayerOverviewComponent implements OnInit {
       }
     });
 
-    const allVals = [...potentialData, ...histVals];
+    const allVals = [...(potentialData.filter((v) => v !== null) as number[]), ...histVals];
     const minVal = Math.min(...allVals);
     const maxVal = Math.max(...allVals);
     let yMin = Math.max(40, Math.floor(minVal - 5));
-    let yMax = Math.min(99, Math.ceil(maxVal + 3));
-    if (yMax - yMin < 10) yMax = yMin + 10;
+    let yMax = Math.ceil(maxVal + 3);
+    if (yMax - yMin < 10) {
+      yMax = yMin + 10;
+    }
+    yMax = Math.min(100, yMax);
 
     this.trendData = {
       labels: labels.map((a) => a.toString()),
@@ -458,6 +529,53 @@ export class PlayerOverviewComponent implements OnInit {
       ],
     };
 
+    const backgroundPlugin = {
+      id: 'backgroundBands',
+      beforeDraw: (chart: any) => {
+        const { ctx, chartArea, scales } = chart;
+        const xAxis = scales.x;
+        const yAxis = scales.y;
+        if (!xAxis || !yAxis) return;
+
+        const group = this.getPositionGroup();
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(
+          chartArea.left,
+          chartArea.top,
+          chartArea.right - chartArea.left,
+          chartArea.bottom - chartArea.top
+        );
+        ctx.clip();
+
+        const labels = this.trendData.labels;
+
+        labels.forEach((labelStr: string, index: number) => {
+          const age = parseInt(labelStr, 10);
+          if (isNaN(age)) return;
+
+          const color = this.getBandColor(age, group);
+          const x = xAxis.getPixelForValue(index);
+
+          let width = 0;
+          if (index < labels.length - 1) {
+            const nextX = xAxis.getPixelForValue(index + 1);
+            width = nextX - x;
+          } else if (index > 0) {
+            const prevX = xAxis.getPixelForValue(index - 1);
+            width = x - prevX;
+          }
+
+          const left = x - width / 2;
+          ctx.fillStyle = color;
+          ctx.fillRect(left, chartArea.top, width, chartArea.bottom - chartArea.top);
+        });
+
+        ctx.restore();
+      },
+    };
+
     this.trendOptions = {
       maintainAspectRatio: false,
       plugins: {
@@ -476,7 +594,10 @@ export class PlayerOverviewComponent implements OnInit {
           },
         },
         x: {
-          grid: { color: 'rgba(255, 255, 255, 0.1)' },
+          grid: {
+            display: false,
+            drawBorder: false,
+          },
           ticks: { color: '#9ca3af' },
           title: {
             display: true,
@@ -486,6 +607,8 @@ export class PlayerOverviewComponent implements OnInit {
         },
       },
     };
+
+    this.trendPlugins = [backgroundPlugin];
   }
 
   private initPhysicalCharts(columns: ColumnSpec[]) {
