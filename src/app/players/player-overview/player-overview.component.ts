@@ -233,57 +233,54 @@ export class PlayerOverviewComponent implements OnInit {
     peakAge: number,
     growthRate: number
   ): number {
-    let baseMax: number;
+    // If player is already past or at peak, their max is roughly their current rating
+    if (age >= peakAge) {
+      return Math.max(currentRating, Math.min(99, currentRating + 1));
+    }
 
-    // Tiered ceiling system based on current performance
-    if (currentRating >= 85) {
-      baseMax = Math.min(95, currentRating + 5);
-    } else if (currentRating >= 75) {
-      baseMax = Math.min(85, currentRating + 8);
-    } else if (currentRating >= 65) {
-      baseMax = Math.min(78, currentRating + 10);
+    const yearsToGrow = peakAge - age;
+
+    // Base potential growth per year based on current rating tier
+    let projectedGrowthPerYear = 0;
+    let absoluteCeiling = 99;
+
+    if (currentRating < 40) {
+      projectedGrowthPerYear = 3.5;
+      absoluteCeiling = 75;
+    } else if (currentRating < 50) {
+      projectedGrowthPerYear = 3.0;
+      absoluteCeiling = 80;
+    } else if (currentRating < 60) {
+      projectedGrowthPerYear = 2.5;
+      absoluteCeiling = 85;
+    } else if (currentRating < 70) {
+      projectedGrowthPerYear = 2.0;
+      absoluteCeiling = 88;
+    } else if (currentRating < 80) {
+      projectedGrowthPerYear = 1.5;
+      absoluteCeiling = 92;
+    } else if (currentRating < 90) {
+      projectedGrowthPerYear = 1.0;
+      absoluteCeiling = 96;
     } else {
-      baseMax = Math.min(72, currentRating + 8);
+      projectedGrowthPerYear = 0.5;
+      absoluteCeiling = 99;
     }
 
-    // Age factor - younger players have more room to grow
-    const yearsToPeak = peakAge - age;
-    const ageFactor = yearsToPeak > 0 ? Math.min(1.0, yearsToPeak / 5) : 0.5;
+    // Influence of current growth rate (if positive)
+    // If they are growing fast, boost the projection slightly
+    // We limit the influence of slope to avoid overreacting to one good season
+    const positiveGrowth = Math.max(0, Math.min(5, growthRate));
+    const blendedGrowth = (projectedGrowthPerYear * 2 + positiveGrowth) / 3;
 
-    // Growth factor - players showing improvement get a boost
-    const growthFactor = Math.max(0.7, Math.min(1.3, 1 + growthRate / 3));
+    // Calculate projected peak
+    const projectedPeak = currentRating + yearsToGrow * blendedGrowth;
 
-    // Combine factors
-    const realisticMax = baseMax * (0.85 + 0.15 * ageFactor) * growthFactor;
-
-    return Math.max(currentRating, Math.min(99, realisticMax));
+    // Apply ceiling
+    return Math.min(absoluteCeiling, Math.min(99, projectedPeak));
   }
 
-  private basePotential(age: number, group: string): number {
-    const cfg = this.ageCurveConfig[group] || this.ageCurveConfig['Other'];
-    const { peakStart, peakEnd } = cfg;
 
-    // More conservative base curve: 70-88 instead of 88-100
-    if (age <= peakStart - 4) return 70;
-    if (age < peakStart) {
-      const t = (age - (peakStart - 4)) / 4;
-      return 70 + t * 10; // Ramp from 70 to 80
-    }
-    if (age <= peakEnd) {
-      const span = Math.max(1, peakEnd - peakStart);
-      const t = (age - peakStart) / span;
-      return 80 + t * 8; // Peak from 80 to 88
-    }
-    if (age <= peakEnd + 4) {
-      const t = (age - peakEnd) / 4;
-      return 88 - t * 8; // Decline from 88 to 80
-    }
-    if (age <= peakEnd + 8) {
-      const t = (age - (peakEnd + 4)) / 4;
-      return 80 - t * 8; // Further decline from 80 to 72
-    }
-    return 70; // Late career baseline
-  }
 
   private computeTrendSlope(values: number[]): number {
     const n = values.length;
@@ -306,10 +303,6 @@ export class PlayerOverviewComponent implements OnInit {
 
     const yearCols = columns.filter((c) => c.key.match(/^\d{4}(_\d{2})?$/));
     yearCols.sort((a, b) => a.key.localeCompare(b.key));
-    if (!yearCols.length) {
-      this.trendData = null;
-      return;
-    }
 
     const currentAge = isNum(this.player['age']) ? (this.player['age'] as number) : 26;
 
@@ -319,74 +312,26 @@ export class PlayerOverviewComponent implements OnInit {
 
     yearCols.forEach((c, idx) => {
       const v = this.player?.[c.key];
-      if (!isNum(v)) return;
-      const approxAge = currentAge - (nYears - 1 - idx);
-      histAges.push(approxAge);
-      histVals.push(v as number);
+      if (isNum(v)) {
+        const approxAge = currentAge - (nYears - 1 - idx);
+        histAges.push(approxAge);
+        histVals.push(v as number);
+      }
     });
 
+    // If no history, try to use current stats
     if (!histVals.length) {
-      const group = this.getPositionGroup();
-      const minAge = Math.max(16, currentAge - 2);
-      const maxAge = Math.min(40, currentAge + 10);
-      const labels: number[] = [];
-      for (let age = minAge; age <= maxAge; age++) labels.push(age);
-
-      // Determine current rating - use overall_avg_last_4 if available, otherwise estimate from base
       const currentRating = isNum(this.player['overall_avg_last_4'])
         ? (this.player['overall_avg_last_4'] as number)
-        : 75; // Reasonable default
+        : null;
 
-      const cfg = this.ageCurveConfig[group] || this.ageCurveConfig['Other'];
-      const peakAge = Math.floor((cfg.peakStart + cfg.peakEnd) / 2);
-      const realisticMax = this.calculateRealisticMaximum(currentRating, currentAge, peakAge, 0);
-
-      const baseCurrent = this.basePotential(currentAge, group);
-      const potentialData = labels.map((age) => {
-        const base = this.basePotential(age, group);
-        let val = base + (baseCurrent - base);
-        val = Math.max(70, Math.min(realisticMax, val));
-        return val;
-      });
-
-      const minVal = Math.min(...potentialData);
-      const maxVal = Math.max(...potentialData);
-      const yMin = Math.max(60, Math.floor(minVal - 10));
-      const yMax = Math.min(99, Math.ceil(maxVal + 3));
-
-      this.trendData = {
-        labels: labels.map((a) => a.toString()),
-        datasets: [
-          {
-            label: 'Potential',
-            data: potentialData,
-            fill: false,
-            borderColor: '#a3e635',
-            borderWidth: 2,
-            tension: 0.35,
-          },
-        ],
-      };
-
-      this.trendOptions = {
-        maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
-        scales: {
-          y: {
-            min: yMin,
-            max: yMax,
-            grid: { color: 'rgba(255, 255, 255, 0.1)' },
-            ticks: { color: '#9ca3af' },
-            title: { display: true, text: 'Profile score', color: '#9ca3af' },
-          },
-          x: {
-            grid: { color: 'rgba(255, 255, 255, 0.1)' },
-            ticks: { color: '#9ca3af' },
-            title: { display: true, text: 'Age', color: '#9ca3af' },
-          },
-        },
-      };
-      return;
+      if (currentRating !== null) {
+        histAges.push(currentAge);
+        histVals.push(currentRating);
+      } else {
+        this.trendData = null;
+        return;
+      }
     }
 
     const histMap = new Map<number, number>();
@@ -405,14 +350,13 @@ export class PlayerOverviewComponent implements OnInit {
 
     const potentialData: number[] = [];
 
-    const baseLast = this.basePotential(lastAge, group);
-    const shift = lastVal - baseLast;
-    const tilt = Math.max(-1.5, Math.min(1.5, slope));
-
     // Calculate realistic maximum ceiling based on current performance
     const cfg = this.ageCurveConfig[group] || this.ageCurveConfig['Other'];
-    const peakAge = Math.floor((cfg.peakStart + cfg.peakEnd) / 2);
-    const realisticMax = this.calculateRealisticMaximum(lastVal, lastAge, peakAge, slope);
+    const peakStart = cfg.peakStart;
+    const peakEnd = cfg.peakEnd;
+    const peakAge = Math.floor((peakStart + peakEnd) / 2);
+
+    const projectedPeak = this.calculateRealisticMaximum(lastVal, lastAge, peakAge, slope);
 
     for (const age of labels) {
       let val: number;
@@ -421,6 +365,7 @@ export class PlayerOverviewComponent implements OnInit {
         if (histMap.has(age)) {
           val = histMap.get(age)!;
         } else {
+          // Interpolate missing history
           let prevIdx = -1;
           let nextIdx = -1;
           for (let i = 0; i < histAges.length; i++) {
@@ -443,18 +388,34 @@ export class PlayerOverviewComponent implements OnInit {
           }
         }
       } else {
-        const base = this.basePotential(age, group);
-        const yearsFromLast = age - lastAge;
+        // Future projection
+        if (age < peakStart) {
+          // Growth phase
+          // Interpolate from lastVal (at lastAge) to projectedPeak (at peakStart)
+          const totalYears = peakStart - lastAge;
+          const yearsPassed = age - lastAge;
+          
+          // If already past peakStart but logic brought us here (shouldn't happen if lastAge >= peakStart)
+          if (totalYears <= 0) {
+             val = projectedPeak;
+          } else {
+             const progress = Math.max(0, Math.min(1, yearsPassed / totalYears));
+             // Ease out curve: fast growth early, slowing down
+             const curve = 1 - Math.pow(1 - progress, 1.5);
+             val = lastVal + (projectedPeak - lastVal) * curve;
+          }
+        } else if (age <= peakEnd) {
+          // Peak phase
+          val = projectedPeak;
+        } else {
+          // Decline phase
+          const yearsPastPeak = age - peakEnd;
+          const declinePerYear = 2.0; // Standard decline
+          val = projectedPeak - yearsPastPeak * declinePerYear;
+        }
 
-        const wShift = Math.max(0, 1 - yearsFromLast / 6);
-        const wTrend = Math.max(0, 1 - yearsFromLast / 4);
-
-        const extraAgePenalty = Math.max(0, yearsFromLast - 2) * 0.7;
-
-        val = base + shift * wShift + tilt * yearsFromLast * wTrend - extraAgePenalty;
-
-        // Apply realistic maximum ceiling
-        val = Math.max(70, Math.min(realisticMax, val));
+        // Safety clamps
+        val = Math.max(40, Math.min(99, val));
       }
 
       potentialData.push(val);
@@ -470,9 +431,9 @@ export class PlayerOverviewComponent implements OnInit {
     const allVals = [...potentialData, ...histVals];
     const minVal = Math.min(...allVals);
     const maxVal = Math.max(...allVals);
-    let yMin = Math.max(60, Math.floor(minVal - 6));
+    let yMin = Math.max(40, Math.floor(minVal - 5));
     let yMax = Math.min(99, Math.ceil(maxVal + 3));
-    if (yMax - yMin < 8) yMax = yMin + 8;
+    if (yMax - yMin < 10) yMax = yMin + 10;
 
     this.trendData = {
       labels: labels.map((a) => a.toString()),
