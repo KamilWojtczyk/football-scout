@@ -227,29 +227,62 @@ export class PlayerOverviewComponent implements OnInit {
     return 'Other';
   }
 
+  private calculateRealisticMaximum(
+    currentRating: number,
+    age: number,
+    peakAge: number,
+    growthRate: number
+  ): number {
+    let baseMax: number;
+
+    // Tiered ceiling system based on current performance
+    if (currentRating >= 85) {
+      baseMax = Math.min(95, currentRating + 5);
+    } else if (currentRating >= 75) {
+      baseMax = Math.min(85, currentRating + 8);
+    } else if (currentRating >= 65) {
+      baseMax = Math.min(78, currentRating + 10);
+    } else {
+      baseMax = Math.min(72, currentRating + 8);
+    }
+
+    // Age factor - younger players have more room to grow
+    const yearsToPeak = peakAge - age;
+    const ageFactor = yearsToPeak > 0 ? Math.min(1.0, yearsToPeak / 5) : 0.5;
+
+    // Growth factor - players showing improvement get a boost
+    const growthFactor = Math.max(0.7, Math.min(1.3, 1 + growthRate / 3));
+
+    // Combine factors
+    const realisticMax = baseMax * (0.85 + 0.15 * ageFactor) * growthFactor;
+
+    return Math.max(currentRating, Math.min(99, realisticMax));
+  }
+
   private basePotential(age: number, group: string): number {
     const cfg = this.ageCurveConfig[group] || this.ageCurveConfig['Other'];
     const { peakStart, peakEnd } = cfg;
 
-    if (age <= peakStart - 4) return 88;
+    // More conservative base curve: 70-88 instead of 88-100
+    if (age <= peakStart - 4) return 70;
     if (age < peakStart) {
       const t = (age - (peakStart - 4)) / 4;
-      return 88 + t * 8;
+      return 70 + t * 10; // Ramp from 70 to 80
     }
     if (age <= peakEnd) {
       const span = Math.max(1, peakEnd - peakStart);
       const t = (age - peakStart) / span;
-      return 96 + t * 4;
+      return 80 + t * 8; // Peak from 80 to 88
     }
     if (age <= peakEnd + 4) {
       const t = (age - peakEnd) / 4;
-      return 96 - t * 6;
+      return 88 - t * 8; // Decline from 88 to 80
     }
     if (age <= peakEnd + 8) {
       const t = (age - (peakEnd + 4)) / 4;
-      return 90 - t * 8;
+      return 80 - t * 8; // Further decline from 80 to 72
     }
-    return 80;
+    return 70; // Late career baseline
   }
 
   private computeTrendSlope(values: number[]): number {
@@ -299,11 +332,20 @@ export class PlayerOverviewComponent implements OnInit {
       const labels: number[] = [];
       for (let age = minAge; age <= maxAge; age++) labels.push(age);
 
+      // Determine current rating - use overall_avg_last_4 if available, otherwise estimate from base
+      const currentRating = isNum(this.player['overall_avg_last_4'])
+        ? (this.player['overall_avg_last_4'] as number)
+        : 75; // Reasonable default
+
+      const cfg = this.ageCurveConfig[group] || this.ageCurveConfig['Other'];
+      const peakAge = Math.floor((cfg.peakStart + cfg.peakEnd) / 2);
+      const realisticMax = this.calculateRealisticMaximum(currentRating, currentAge, peakAge, 0);
+
       const baseCurrent = this.basePotential(currentAge, group);
       const potentialData = labels.map((age) => {
         const base = this.basePotential(age, group);
         let val = base + (baseCurrent - base);
-        val = Math.max(70, Math.min(99, val));
+        val = Math.max(70, Math.min(realisticMax, val));
         return val;
       });
 
@@ -367,6 +409,11 @@ export class PlayerOverviewComponent implements OnInit {
     const shift = lastVal - baseLast;
     const tilt = Math.max(-1.5, Math.min(1.5, slope));
 
+    // Calculate realistic maximum ceiling based on current performance
+    const cfg = this.ageCurveConfig[group] || this.ageCurveConfig['Other'];
+    const peakAge = Math.floor((cfg.peakStart + cfg.peakEnd) / 2);
+    const realisticMax = this.calculateRealisticMaximum(lastVal, lastAge, peakAge, slope);
+
     for (const age of labels) {
       let val: number;
 
@@ -406,7 +453,8 @@ export class PlayerOverviewComponent implements OnInit {
 
         val = base + shift * wShift + tilt * yearsFromLast * wTrend - extraAgePenalty;
 
-        val = Math.max(70, Math.min(99, val));
+        // Apply realistic maximum ceiling
+        val = Math.max(70, Math.min(realisticMax, val));
       }
 
       potentialData.push(val);
