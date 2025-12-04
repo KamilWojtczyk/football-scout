@@ -611,6 +611,36 @@ export class PlayerOverviewComponent implements OnInit {
     this.trendPlugins = [backgroundPlugin];
   }
 
+  averageLinePlugin = {
+    id: 'averageLine',
+    afterDatasetsDraw: (chart: any, args: any, options: any) => {
+      const { ctx, chartArea, scales } = chart;
+      const yAxis = scales.y;
+      const avgValue = options.avgValue;
+
+      if (avgValue === null || avgValue === undefined) return;
+
+      const y = yAxis.getPixelForValue(avgValue);
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.strokeStyle = options.color || '#9ca3af';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([5, 5]);
+      ctx.moveTo(chartArea.left, y);
+      ctx.lineTo(chartArea.right, y);
+      ctx.stroke();
+
+      // Label
+      ctx.fillStyle = options.color || '#9ca3af';
+      ctx.font = '12px sans-serif';
+      ctx.textAlign = 'right';
+      ctx.fillText('Avg: ' + avgValue.toFixed(1), chartArea.right, y - 5);
+
+      ctx.restore();
+    },
+  };
+
   private initPhysicalCharts(columns: ColumnSpec[]) {
     this.physicalCharts = [];
 
@@ -639,27 +669,20 @@ export class PlayerOverviewComponent implements OnInit {
             data: [playerVal],
             backgroundColor: 'rgba(59, 130, 246, 0.85)',
             borderRadius: 4,
-          },
-          {
-            label: 'Position Avg',
-            data: [avgVal],
-            backgroundColor: 'rgba(156, 163, 175, 0.85)',
-            borderRadius: 4,
+            barPercentage: 0.6,
           },
         ],
       };
+
+      // Ensure scale includes both player value and average
+      const maxValue = Math.max(playerVal as number, avgVal || 0);
+      const suggestedMax = maxValue * 1.15; // Add some headroom
 
       const options = {
         maintainAspectRatio: false,
         plugins: {
           legend: {
-            display: true,
-            position: 'bottom',
-            labels: {
-              color: '#9ca3af',
-              boxWidth: 10,
-              usePointStyle: true,
-            },
+            display: false, // Hide legend since we only have one bar and the line is self-labeled
           },
           tooltip: {
             callbacks: {
@@ -688,10 +711,15 @@ export class PlayerOverviewComponent implements OnInit {
               return value;
             },
           },
+          averageLine: {
+            avgValue: avgVal,
+            color: '#f87171', // Reddish color for visibility
+          },
         },
         scales: {
           y: {
             beginAtZero: true,
+            suggestedMax: suggestedMax,
             grid: { color: 'rgba(255, 255, 255, 0.1)' },
             ticks: { color: '#9ca3af' },
           },
