@@ -172,16 +172,16 @@
       </div>
     </div>
 
-    <!-- RADAR CHART -->
+    <!-- POLAR CHART -->
     <div class="card spider-chart">
       <h2>Position Specific Comparison</h2>
-      <p-chart type="radar" [data]="spiderData" [options]="spiderOptions" height="260px"></p-chart>
+      <p-chart type="polarArea" [data]="polarData" [options]="polarOptions" [plugins]="polarPlugins" height="350px"></p-chart>
     </div>
 
     <!-- DEVELOPMENT TREND / PLAYER POTENTIAL -->
     <div class="card development-trend">
       <h2>Player Potential</h2>
-      <p-chart type="line" [data]="trendData" [options]="trendOptions" [plugins]="trendPlugins" height="260px"></p-chart>
+      <p-chart type="line" [data]="trendData" [options]="trendOptions" [plugins]="trendPlugins" height="350px"></p-chart>
     </div>
 
     <!-- PHYSICAL DATA (only non-GK AND only if we have stats) -->

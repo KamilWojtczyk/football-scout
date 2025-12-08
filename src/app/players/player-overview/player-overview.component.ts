@@ -38,8 +38,9 @@ export class PlayerOverviewComponent implements OnInit {
 
   private tabRows: PlayerRow[] = [];
 
-  spiderData: any;
-  spiderOptions: any;
+  polarData: any;
+  polarOptions: any;
+  polarPlugins: any[] = [ChartDataLabels];
 
   trendData: any;
   trendOptions: any;
@@ -131,6 +132,15 @@ export class PlayerOverviewComponent implements OnInit {
     return this.BG_COLORS.RED;
   }
 
+  private getScoreColor(value: number): string {
+    if (value >= 90) return this.BG_COLORS.DARK_GREEN;
+    if (value >= 80) return this.BG_COLORS.GREEN;
+    if (value >= 70) return this.BG_COLORS.YELLOW;
+    if (value >= 60) return this.BG_COLORS.ORANGE;
+    if (value >= 50) return this.BG_COLORS.RED;
+    return this.BG_COLORS.DARK_RED;
+  }
+
   get isGoalkeeperTab(): boolean {
     return (this.tabName ?? '').toLowerCase().includes('keeper');
   }
@@ -167,7 +177,7 @@ export class PlayerOverviewComponent implements OnInit {
           if (this.player) {
             this.initContractMeta();
             this.initStarQuantiles();
-            this.initSpiderChart(tab.columns);
+            this.initPolarChart(tab.columns);
             this.initTrendChart(tab.columns);
             this.initPhysicalCharts(tab.columns);
           }
@@ -232,44 +242,100 @@ export class PlayerOverviewComponent implements OnInit {
     return Array.from({ length: 5 }, (_, i) => (i < rating ? 1 : 0));
   }
 
-  private initSpiderChart(columns: ColumnSpec[]) {
-    const spiderCols = columns.filter(
+  private initPolarChart(columns: ColumnSpec[]) {
+    const chartCols = columns.filter(
       (c) =>
         c.banding === 'fixed' && !c.key.match(/^\d{4}(_\d{2})?$/) && c.key !== 'overall_avg_last_4'
     );
 
-    const labels = spiderCols.map((c) => c.label);
-    const data = spiderCols.map((c) =>
+    const labels = chartCols.map((c) => c.label);
+    const data = chartCols.map((c) =>
       isNum(this.player?.[c.key]) ? (this.player as any)[c.key] : 0
     );
 
-    this.spiderData = {
+    const backgroundColors = data.map((v) => this.getScoreColor(v));
+    const borderColors = data.map(() => '#1f2937');
+
+    this.polarData = {
       labels,
       datasets: [
         {
-          label: this.player?.['player_name'],
           data,
-          fill: true,
-          backgroundColor: 'rgba(54, 162, 235, 0.2)',
-          borderColor: 'rgb(54, 162, 235)',
-          pointBackgroundColor: 'rgb(54, 162, 235)',
-          pointBorderColor: '#fff',
+          backgroundColor: backgroundColors,
+          borderColor: borderColors,
+          borderWidth: 2,
         },
       ],
     };
 
-    this.spiderOptions = {
+    this.polarOptions = {
       maintainAspectRatio: false,
       plugins: {
-        legend: { display: false },
+        legend: {
+          display: false,
+        },
+        tooltip: {
+            enabled: true,
+            callbacks: {
+                label: (ctx: any) => {
+                   return ctx.chart.data.labels[ctx.dataIndex] + ': ' + ctx.raw;
+                }
+            }
+        },
+        datalabels: {
+          display: true,
+          color: 'black',
+          backgroundColor: 'rgba(255, 255, 255, 0.9)',
+          borderRadius: 4,
+          font: {
+            weight: 'bold',
+            size: 11,
+          },
+          padding: 4,
+          formatter: (value: any) => Math.round(value),
+          anchor: 'end',
+          align: 'start',
+          offset: -4, 
+        },
       },
       scales: {
         r: {
-          angleLines: { color: 'rgba(255, 255, 255, 0.2)' },
-          grid: { color: 'rgba(255, 255, 255, 0.2)' },
+          grid: {
+             color: 'rgba(255, 255, 255, 0.1)',
+             circular: true
+          },
+          angleLines: {
+             display: true,
+             color: 'rgba(255, 255, 255, 0.3)',
+             lineWidth: 1
+          },
           pointLabels: {
+            display: true,
+            centerPointLabels: true, 
+            centered: true, 
             color: '#9ca3af',
-            font: { size: 11 },
+            padding: 5, 
+            font: {
+              size: 10
+            },
+            callback: (label: string) => {
+              let lines: string[] = [];
+              if (label.length > 20) {
+                 const words = label.split(' ');
+                 let currentLine = words[0];
+                 for (let i = 1; i < words.length; i++) {
+                     if (currentLine.length + words[i].length + 1 < 20) {
+                        currentLine += ' ' + words[i];
+                     } else {
+                        lines.push(currentLine);
+                        currentLine = words[i];
+                     }
+                 }
+                 lines.push(currentLine);
+                 return lines;
+              }
+              return label;
+            }
           },
           ticks: {
             display: false,
