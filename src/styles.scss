@@ -117,10 +117,11 @@ router-outlet {
   }
 }
 
-/* ==================== TOOLBAR - COMPACT ==================== */
+/* ==================== TOOLBAR - COMPACT (DARK ENFORCED) ==================== */
 .p-toolbar {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
+  background: #252525 !important; /* Force dark background */
+  border: 1px solid #404040 !important;
+  color: #f5f5f5 !important;
   border-radius: 0;
   padding: 0.5rem 1rem;
   margin: 0;
@@ -135,17 +136,17 @@ router-outlet {
   flex-wrap: wrap;
 }
 
-/* ==================== FORM CONTROLS ==================== */
+/* ==================== FORM CONTROLS (DARK ENFORCED) ==================== */
 .p-input-icon-left {
   i {
-    color: var(--text-tertiary);
+    color: #737373 !important;
     font-size: 0.875rem;
   }
 
   input {
-    background: var(--bg-tertiary);
-    border: 1px solid var(--border-color);
-    color: var(--text-primary);
+    background: #2d2d2d !important;
+    border: 1px solid #404040 !important;
+    color: #f5f5f5 !important;
     padding: 0.4rem 0.75rem 0.4rem 2rem;
     font-size: 0.8rem;
     border-radius: 4px;
@@ -153,12 +154,12 @@ router-outlet {
     font-family: 'Inter', sans-serif;
 
     &::placeholder {
-      color: var(--text-tertiary);
+      color: #737373 !important;
     }
 
     &:focus {
-      border-color: var(--accent-primary);
-      background: var(--bg-card);
+      border-color: var(--accent-primary) !important;
+      background: #2a2a2a !important;
       outline: none;
       box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
     }
@@ -166,49 +167,62 @@ router-outlet {
 }
 
 .p-select {
-  background: var(--bg-tertiary) !important;
-  border: 1px solid var(--border-color) !important;
+  background: #2d2d2d !important; /* Force dark background */
+  border: 1px solid #404040 !important;
   border-radius: 4px;
   font-size: 0.8rem;
-  color: var(--text-primary);
+  color: #f5f5f5 !important;
   min-height: auto;
   font-family: 'Inter', sans-serif;
 
   .p-select-label {
     padding: 0.4rem 0.75rem;
+    color: #f5f5f5 !important;
+  }
+  
+  .p-select-dropdown {
+      color: #a3a3a3 !important;
   }
 
   &:hover {
-    border-color: var(--accent-primary);
+    border-color: var(--accent-primary) !important;
   }
 
   &:focus,
   &.p-focus {
-    border-color: var(--accent-primary);
+    border-color: var(--accent-primary) !important;
     box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
   }
 }
 
-/* ==================== DROPDOWN PANEL ==================== */
+/* ==================== DROPDOWN PANEL (DARK ENFORCED) ==================== */
 .p-select-overlay {
-  background: var(--bg-tertiary);
-  border: 1px solid var(--border-color);
-  color: var(--text-primary);
+  background: #2d2d2d !important;
+  border: 1px solid #404040 !important;
+  color: #f5f5f5 !important;
   font-family: 'Inter', sans-serif;
 
   .p-select-option {
-    color: var(--text-primary);
+    color: #f5f5f5 !important;
     padding: 0.5rem 0.75rem;
+    background: transparent;
 
-    &:hover {
-      background: var(--bg-hover);
+    &:hover, 
+    &.p-select-option-focus { // Ensure hover/focus state is visible
+      background: #333333 !important;
+      color: #f5f5f5 !important;
     }
 
     &.p-select-option-selected,
     &.p-focus {
-      background: var(--accent-primary);
-      color: white;
+      background: var(--accent-primary) !important;
+      color: white !important;
     }
+  }
+  
+  .p-select-empty-message {
+      color: #a3a3a3 !important;
+      background: #2d2d2d !important;
   }
 }
 
