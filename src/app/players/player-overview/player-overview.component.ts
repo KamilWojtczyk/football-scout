@@ -11,6 +11,8 @@ import { switchMap, map, forkJoin } from 'rxjs';
 
 type Quantiles = [number, number, number, number];
 
+type AgePeriodKey = 'early' | 'late' | 'performance' | 'peak' | 'past' | 'history';
+
 interface PhysicalChartDef {
   key: string;
   label: string;
@@ -66,70 +68,90 @@ export class PlayerOverviewComponent implements OnInit {
     Other: { peakStart: 26, peakEnd: 30 },
   };
 
-  // Background colors for the chart bands (using rgba for transparency)
   private readonly BG_COLORS = {
-    DARK_GREEN: 'rgba(74, 222, 128, 0.8)', // --score-90  #4ade80
-    GREEN: 'rgba(134, 239, 172, 0.8)', // --score-80  #86efac
-    YELLOW: 'rgba(251, 191, 36, 0.8)', // --score-70  #fbbf24
-    ORANGE: 'rgba(251, 146, 60, 0.8)', // --score-60  #fb923c
-    RED: 'rgba(248, 113, 113, 0.8)', // --score-50  #f87171
+    DARK_GREEN: 'rgba(74, 222, 128, 0.8)',
+    GREEN: 'rgba(134, 239, 172, 0.8)',
+    YELLOW: 'rgba(251, 191, 36, 0.8)',
+    ORANGE: 'rgba(251, 146, 60, 0.8)',
+    RED: 'rgba(248, 113, 113, 0.8)',
     DARK_RED: 'rgba(239, 68, 68, 0.8)',
   };
 
-  private getBandColor(age: number, group: string): string {
+  private readonly AGE_BAND_COLORS: Record<AgePeriodKey, string> = {
+    early: 'rgba(124, 252, 0, 0.75)',
+    late: 'rgba(50, 205, 50, 0.9)',
+    performance: 'rgba(0, 100, 0, 0.95)',
+    peak: 'rgba(255, 245, 157, 0.95)',
+    past: 'rgba(181, 23, 0, 0.5)',
+    history: 'rgba(238, 34, 12, 0.3)',
+  };
+
+  private readonly AGE_BAND_LABELS: Record<AgePeriodKey, string> = {
+    early: 'Early develop',
+    late: 'Late develop',
+    performance: 'Performance',
+    peak: '“Peak Performance”',
+    past: 'Past performance',
+    history: 'History',
+  };
+
+  private getAgePeriod(age: number, group: string): AgePeriodKey {
     if (!group) group = 'Other';
 
     if (group === 'GK') {
-      if (age <= 22) return this.BG_COLORS.DARK_GREEN;
-      if (age <= 24) return this.BG_COLORS.GREEN;
-      if (age <= 26) return this.BG_COLORS.YELLOW;
-      if (age <= 29) return this.BG_COLORS.ORANGE;
-      return this.BG_COLORS.RED;
+      if (age <= 22) return 'early';
+      if (age <= 24) return 'late';
+      if (age <= 26) return 'performance';
+      if (age <= 29) return 'peak';
+      return 'past';
     }
 
     if (group === 'CB') {
-      if (age <= 21) return this.BG_COLORS.DARK_GREEN;
-      if (age <= 23) return this.BG_COLORS.GREEN;
-      if (age <= 25) return this.BG_COLORS.YELLOW;
-      if (age <= 29) return this.BG_COLORS.ORANGE;
-      if (age <= 29) return this.BG_COLORS.RED;
-      return this.BG_COLORS.DARK_RED;
+      if (age <= 21) return 'early';
+      if (age <= 23) return 'late';
+      if (age <= 25) return 'performance';
+      if (age <= 28) return 'peak';
+      if (age <= 30) return 'past';
+      return 'history';
     }
 
     if (['6', '8', 'FB'].includes(group)) {
-      if (age <= 19) return this.BG_COLORS.DARK_GREEN;
-      if (age <= 21) return this.BG_COLORS.GREEN;
-      if (age <= 23) return this.BG_COLORS.YELLOW;
-      if (age <= 26) return this.BG_COLORS.ORANGE;
-      if (age <= 28) return this.BG_COLORS.RED;
-      return this.BG_COLORS.DARK_RED;
+      if (age <= 19) return 'early';
+      if (age <= 21) return 'late';
+      if (age <= 23) return 'performance';
+      if (age <= 26) return 'peak';
+      if (age <= 28) return 'past';
+      return 'history';
     }
 
-    // Midfielders generally similar
     if (group === '10') {
-      if (age <= 20) return this.BG_COLORS.DARK_GREEN;
-      if (age <= 22) return this.BG_COLORS.GREEN;
-      if (age <= 24) return this.BG_COLORS.YELLOW;
-      if (age <= 27) return this.BG_COLORS.ORANGE;
-      if (age <= 29) return this.BG_COLORS.RED;
-      return this.BG_COLORS.DARK_RED;
+      if (age <= 20) return 'early';
+      if (age <= 22) return 'late';
+      if (age <= 24) return 'performance';
+      if (age <= 27) return 'peak';
+      if (age <= 29) return 'past';
+      return 'history';
     }
 
     if (group === '9') {
-      if (age <= 21) return this.BG_COLORS.DARK_GREEN;
-      if (age <= 23) return this.BG_COLORS.GREEN;
-      if (age <= 25) return this.BG_COLORS.YELLOW;
-      if (age <= 28) return this.BG_COLORS.ORANGE;
-      if (age <= 30) return this.BG_COLORS.RED;
-      return this.BG_COLORS.DARK_RED;
+      if (age <= 21) return 'early';
+      if (age <= 23) return 'late';
+      if (age <= 25) return 'performance';
+      if (age <= 28) return 'peak';
+      if (age <= 30) return 'past';
+      return 'history';
     }
 
-    // Fallback
-    if (age <= 21) return this.BG_COLORS.DARK_GREEN;
-    if (age <= 24) return this.BG_COLORS.GREEN;
-    if (age <= 26) return this.BG_COLORS.YELLOW;
-    if (age <= 29) return this.BG_COLORS.ORANGE;
-    return this.BG_COLORS.RED;
+    if (age <= 21) return 'early';
+    if (age <= 24) return 'late';
+    if (age <= 26) return 'performance';
+    if (age <= 29) return 'peak';
+    return 'past';
+  }
+
+  private getBandColor(age: number, group: string): string {
+    const period = this.getAgePeriod(age, group);
+    return this.AGE_BAND_COLORS[period];
   }
 
   private getScoreColor(value: number): string {
@@ -161,7 +183,6 @@ export class PlayerOverviewComponent implements OnInit {
               if (!tab) {
                 throw new Error(`Tab ${this.tabName} not found`);
               }
-              console.log(tab);
               return this.dataService
                 .getTab(tab.file)
                 .pipe(map((rows) => ({ rows, tab, playerName })));
@@ -355,7 +376,7 @@ export class PlayerOverviewComponent implements OnInit {
     if (tab.startsWith('FB')) return 'FB';
     if (tab.startsWith('#6')) return '6';
     if (tab.startsWith('#8')) return '8';
-    if (tab.startsWith('#10') || tab.startsWith('RW') || tab.startsWith('LW')) return '10';
+    if (tab.startsWith('RW') || tab.startsWith('LW')) return '10';
     if (tab.startsWith('#9')) return '9';
     return 'Other';
   }
@@ -366,14 +387,12 @@ export class PlayerOverviewComponent implements OnInit {
     peakAge: number,
     growthRate: number
   ): number {
-    // If player is already past or at peak, their max is roughly their current rating
     if (age >= peakAge) {
       return Math.max(currentRating, Math.min(99, currentRating + 1));
     }
 
     const yearsToGrow = peakAge - age;
 
-    // Base potential growth per year based on current rating tier
     let projectedGrowthPerYear = 0;
     let absoluteCeiling = 99;
 
@@ -535,7 +554,7 @@ export class PlayerOverviewComponent implements OnInit {
               val = projectedPeak;
             } else {
               const progress = Math.max(0, Math.min(1, yearsPassed / totalYears));
-              const curve = 1 - Math.pow(1 - progress, 1.5); // ease-out
+              const curve = 1 - Math.pow(1 - progress, 1.5);
               val = lastVal + (projectedPeak - lastVal) * curve;
             }
           } else if (age <= peakEnd) {
@@ -579,7 +598,7 @@ export class PlayerOverviewComponent implements OnInit {
           label: 'Potential',
           data: potentialData,
           fill: false,
-          borderColor: '#a3e635',
+          borderColor: 'rgba(255, 120, 0, 1) ',
           borderWidth: 2,
           tension: 0.35,
         },
@@ -587,7 +606,7 @@ export class PlayerOverviewComponent implements OnInit {
           label: 'Actual OVR',
           data: actualSeries,
           fill: false,
-          borderColor: '#22c55e',
+          borderColor: 'rgba(255, 120, 0, 1) ',
           borderDash: [4, 4],
           pointRadius: 3,
           spanGaps: false,
@@ -601,9 +620,9 @@ export class PlayerOverviewComponent implements OnInit {
         const { ctx, chartArea, scales } = chart;
         const xAxis = scales.x;
         const yAxis = scales.y;
-        if (!xAxis || !yAxis) return;
+        if (!xAxis || !yAxis || !chartArea) return;
 
-        const group = this.getPositionGroup();
+        const labels: string[] = chart.data.labels;
 
         ctx.save();
         ctx.beginPath();
@@ -614,8 +633,6 @@ export class PlayerOverviewComponent implements OnInit {
           chartArea.bottom - chartArea.top
         );
         ctx.clip();
-
-        const labels = this.trendData.labels;
 
         labels.forEach((labelStr: string, index: number) => {
           const age = parseInt(labelStr, 10);
@@ -631,19 +648,195 @@ export class PlayerOverviewComponent implements OnInit {
           } else if (index > 0) {
             const prevX = xAxis.getPixelForValue(index - 1);
             width = x - prevX;
+          } else {
+            width = xAxis.width / labels.length;
           }
 
           const left = x - width / 2;
+
           ctx.fillStyle = color;
           ctx.fillRect(left, chartArea.top, width, chartArea.bottom - chartArea.top);
+
+
+          const period = this.getAgePeriod(age, group);
+          let nextPeriod = period;
+
+          if (index < labels.length - 1) {
+            const nextAge = parseInt(labels[index + 1], 10);
+            if (!isNaN(nextAge)) {
+               nextPeriod = this.getAgePeriod(nextAge, group);
+            }
+          }
+
+
         });
 
         ctx.restore();
       },
+
+      afterDatasetsDraw: (chart: any) => {
+        const { ctx, chartArea, scales, data } = chart;
+        const xAxis = scales.x;
+        const yAxis = scales.y;
+        if (!xAxis || !yAxis || !chartArea) return;
+
+        const labels: string[] = data.labels;
+
+        const periodBounds: Partial<Record<AgePeriodKey, { minLeft: number; maxRight: number }>> =
+          {};
+
+        labels.forEach((labelStr: string, index: number) => {
+          const age = parseInt(labelStr, 10);
+          if (isNaN(age)) return;
+
+          const period = this.getAgePeriod(age, group);
+          const x = xAxis.getPixelForValue(index);
+
+          let width = 0;
+          if (index < labels.length - 1) {
+            const nextX = xAxis.getPixelForValue(index + 1);
+            width = nextX - x;
+          } else if (index > 0) {
+            const prevX = xAxis.getPixelForValue(index - 1);
+            width = x - prevX;
+          } else {
+            width = xAxis.width / labels.length;
+          }
+
+          const left = x - width / 2;
+          const right = left + width;
+
+          const bounds = periodBounds[period];
+          if (!bounds) {
+            periodBounds[period] = { minLeft: left, maxRight: right };
+          } else {
+            bounds.minLeft = Math.min(bounds.minLeft, left);
+            bounds.maxRight = Math.max(bounds.maxRight, right);
+          }
+
+
+          let nextPeriod = period;
+          if (index < labels.length - 1) {
+            const nextAge = parseInt(labels[index + 1], 10);
+            if (!isNaN(nextAge)) {
+               nextPeriod = this.getAgePeriod(nextAge, group);
+            }
+          }
+
+          if (period !== nextPeriod) {
+            const lineX = right;
+            ctx.save();
+            ctx.beginPath();
+            const verticalMargin = 15;
+            ctx.moveTo(lineX, verticalMargin);
+            ctx.lineTo(lineX, chart.height - 40);
+            ctx.lineWidth = 1;
+            ctx.strokeStyle = '#60a5fa';
+            ctx.stroke();
+            ctx.restore();
+          }
+        });
+
+        const currentAge = isNum(this.player?.['age']) ? (this.player!['age'] as number) : null;
+        const roundedAge = currentAge != null ? Math.round(currentAge) : null;
+        const currentPeriod: AgePeriodKey | null =
+          roundedAge != null ? this.getAgePeriod(roundedAge, group) : null;
+
+        ctx.save();
+        ctx.textBaseline = 'middle';
+        ctx.textAlign = 'center';
+        ctx.font = 'bold 14px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+
+        const labelPaddingX = 6;
+        const labelPaddingY = 3;
+        const approxTextHeight = 12;
+        const labelY = chartArea.top - 30;
+
+        (Object.keys(periodBounds) as AgePeriodKey[]).forEach((period) => {
+          const bounds = periodBounds[period]!;
+          const bandWidth = bounds.maxRight - bounds.minLeft;
+          const centerX = (bounds.minLeft + bounds.maxRight) / 2;
+          const text = this.AGE_BAND_LABELS[period];
+
+          const metrics = ctx.measureText(text);
+          const textWidth = metrics.width;
+          const totalWidth = textWidth + labelPaddingX * 2;
+
+          if (totalWidth > bandWidth - 4) {
+            return;
+          }
+
+          const totalHeight = approxTextHeight + labelPaddingY * 2;
+          const rectX = centerX - totalWidth / 2;
+          const rectY = labelY - totalHeight / 2;
+
+          if (currentPeriod === period) {
+            ctx.save();
+            ctx.strokeStyle = '#f97316';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(rectX, rectY, totalWidth, totalHeight);
+            ctx.restore();
+          }
+
+          ctx.fillStyle = '#ffffff';
+          ctx.fillText(text, centerX, labelY);
+        });
+
+        ctx.restore();
+
+        if (currentAge != null) {
+          const idxFromAge = labels.findIndex((l) => parseInt(l, 10) === Math.round(currentAge));
+          const idx = idxFromAge !== -1 ? idxFromAge : labels.length - 1;
+
+          const x = xAxis.getPixelForValue(idx);
+
+          const actualDs = chart.data.datasets[1];
+          const raw = actualDs?.data?.[idx] as number | null;
+          const yValue = raw != null ? raw : (chart.data.datasets[0].data[idx] as number);
+          const y = yAxis.getPixelForValue(yValue);
+
+          const arrowTopY = chartArea.top - 6;
+
+          ctx.save();
+          ctx.strokeStyle = 'rgba(255, 120, 0, 1)';
+          ctx.fillStyle = 'rgba(255, 120, 0, 1)';
+          ctx.lineWidth = 3;
+
+          ctx.beginPath();
+          ctx.moveTo(x, arrowTopY);
+          ctx.lineTo(x, y - 8);
+          ctx.stroke();
+
+          ctx.beginPath();
+          ctx.moveTo(x, y - 8);
+          ctx.lineTo(x - 5, y + 2);
+          ctx.lineTo(x + 5, y + 2);
+          ctx.closePath();
+          ctx.fill();
+
+          ctx.textBaseline = 'bottom';
+          ctx.textAlign = 'center';
+          ctx.font =
+            'bold 11px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+          ctx.fillText('Now', x, arrowTopY - 2);
+
+          ctx.restore();
+        }
+      },
     };
+
+    this.trendPlugins = [backgroundPlugin];
 
     this.trendOptions = {
       maintainAspectRatio: false,
+      layout: {
+        padding: {
+          top: 48,
+          right: 16,
+          bottom: 24,
+          left: 8,
+        },
+      },
       plugins: {
         legend: { display: false },
       },
@@ -673,8 +866,6 @@ export class PlayerOverviewComponent implements OnInit {
         },
       },
     };
-
-    this.trendPlugins = [backgroundPlugin];
   }
 
   private initPhysicalCharts(columns: ColumnSpec[]) {
@@ -760,7 +951,7 @@ export class PlayerOverviewComponent implements OnInit {
             offset: -2,
             font: {
               size: 10,
-              weight: '900',
+              weight: '700',
             },
             formatter: (value: any) => {
               if (typeof value === 'number') {
