@@ -275,12 +275,12 @@ export class PlayerOverviewComponent implements OnInit {
           display: false,
         },
         tooltip: {
-            enabled: true,
-            callbacks: {
-                label: (ctx: any) => {
-                   return ctx.chart.data.labels[ctx.dataIndex] + ': ' + ctx.raw;
-                }
-            }
+          enabled: true,
+          callbacks: {
+            label: (ctx: any) => {
+              return ctx.chart.data.labels[ctx.dataIndex] + ': ' + ctx.raw;
+            },
+          },
         },
         datalabels: {
           display: true,
@@ -295,47 +295,47 @@ export class PlayerOverviewComponent implements OnInit {
           formatter: (value: any) => Math.round(value),
           anchor: 'end',
           align: 'start',
-          offset: -4, 
+          offset: -4,
         },
       },
       scales: {
         r: {
           grid: {
-             color: 'rgba(255, 255, 255, 0.1)',
-             circular: true
+            color: 'rgba(255, 255, 255, 0.1)',
+            circular: true,
           },
           angleLines: {
-             display: true,
-             color: 'rgba(255, 255, 255, 0.3)',
-             lineWidth: 1
+            display: true,
+            color: 'rgba(255, 255, 255, 0.3)',
+            lineWidth: 1,
           },
           pointLabels: {
             display: true,
-            centerPointLabels: true, 
-            centered: true, 
+            centerPointLabels: true,
+            centered: true,
             color: '#9ca3af',
-            padding: 5, 
+            padding: 5,
             font: {
-              size: 10
+              size: 10,
             },
             callback: (label: string) => {
               let lines: string[] = [];
               if (label.length > 20) {
-                 const words = label.split(' ');
-                 let currentLine = words[0];
-                 for (let i = 1; i < words.length; i++) {
-                     if (currentLine.length + words[i].length + 1 < 20) {
-                        currentLine += ' ' + words[i];
-                     } else {
-                        lines.push(currentLine);
-                        currentLine = words[i];
-                     }
-                 }
-                 lines.push(currentLine);
-                 return lines;
+                const words = label.split(' ');
+                let currentLine = words[0];
+                for (let i = 1; i < words.length; i++) {
+                  if (currentLine.length + words[i].length + 1 < 20) {
+                    currentLine += ' ' + words[i];
+                  } else {
+                    lines.push(currentLine);
+                    currentLine = words[i];
+                  }
+                }
+                lines.push(currentLine);
+                return lines;
               }
               return label;
-            }
+            },
           },
           ticks: {
             display: false,
@@ -677,36 +677,6 @@ export class PlayerOverviewComponent implements OnInit {
     this.trendPlugins = [backgroundPlugin];
   }
 
-  averageLinePlugin = {
-    id: 'averageLine',
-    afterDatasetsDraw: (chart: any, args: any, options: any) => {
-      const { ctx, chartArea, scales } = chart;
-      const yAxis = scales.y;
-      const avgValue = options.avgValue;
-
-      if (avgValue === null || avgValue === undefined) return;
-
-      const y = yAxis.getPixelForValue(avgValue);
-
-      ctx.save();
-      ctx.beginPath();
-      ctx.strokeStyle = options.color || '#9ca3af';
-      ctx.lineWidth = 2;
-      ctx.setLineDash([5, 5]);
-      ctx.moveTo(chartArea.left, y);
-      ctx.lineTo(chartArea.right, y);
-      ctx.stroke();
-
-      // Label
-      ctx.fillStyle = options.color || '#9ca3af';
-      ctx.font = '12px sans-serif';
-      ctx.textAlign = 'right';
-      ctx.fillText('Avg: ' + avgValue.toFixed(1), chartArea.right, y - 5);
-
-      ctx.restore();
-    },
-  };
-
   private initPhysicalCharts(columns: ColumnSpec[]) {
     this.physicalCharts = [];
 
@@ -724,8 +694,31 @@ export class PlayerOverviewComponent implements OnInit {
 
       if (!isNum(playerVal)) continue;
 
-      const vals = this.tabRows.map((r) => r[c.key]).filter((v) => isNum(v)) as number[];
-      const avgVal = vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
+      const p = c.percentiles;
+
+      let labelBgColor = this.BG_COLORS.DARK_RED;
+      let labelTextColor = 'white';
+
+      if (p) {
+        if (isNum(p.p90) && (playerVal as number) >= p.p90!) {
+          labelBgColor = this.BG_COLORS.DARK_GREEN;
+          labelTextColor = 'black';
+        } else if (isNum(p.p80) && (playerVal as number) >= p.p80!) {
+          labelBgColor = this.BG_COLORS.GREEN;
+          labelTextColor = 'black';
+        } else if (isNum(p.p70) && (playerVal as number) >= p.p70!) {
+          labelBgColor = this.BG_COLORS.YELLOW;
+          labelTextColor = 'black';
+        } else if (isNum(p.p60) && (playerVal as number) >= p.p60!) {
+          labelBgColor = this.BG_COLORS.ORANGE;
+          labelTextColor = 'black';
+        } else if (isNum(p.p50) && (playerVal as number) >= p.p50!) {
+          labelBgColor = this.BG_COLORS.RED;
+          labelTextColor = 'black';
+        }
+      }
+
+      const suggestedMax = (playerVal as number) * 1.1;
 
       const data = {
         labels: [''],
@@ -740,15 +733,11 @@ export class PlayerOverviewComponent implements OnInit {
         ],
       };
 
-      // Ensure scale includes both player value and average
-      const maxValue = Math.max(playerVal as number, avgVal || 0);
-      const suggestedMax = maxValue * 1.15; // Add some headroom
-
       const options = {
         maintainAspectRatio: false,
         plugins: {
           legend: {
-            display: false, // Hide legend since we only have one bar and the line is self-labeled
+            display: false,
           },
           tooltip: {
             callbacks: {
@@ -762,13 +751,16 @@ export class PlayerOverviewComponent implements OnInit {
             },
           },
           datalabels: {
-            color: '#e5e7eb',
+            color: labelTextColor,
+            backgroundColor: labelBgColor,
+            borderRadius: 4,
+            padding: 6,
             anchor: 'end',
             align: 'end',
             offset: -2,
             font: {
               size: 10,
-              weight: '500',
+              weight: '900',
             },
             formatter: (value: any) => {
               if (typeof value === 'number') {
@@ -776,10 +768,6 @@ export class PlayerOverviewComponent implements OnInit {
               }
               return value;
             },
-          },
-          averageLine: {
-            avgValue: avgVal,
-            color: '#f87171', // Reddish color for visibility
           },
         },
         scales: {

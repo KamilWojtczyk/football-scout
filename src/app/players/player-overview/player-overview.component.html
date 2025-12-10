@@ -175,13 +175,25 @@
     <!-- POLAR CHART -->
     <div class="card spider-chart">
       <h2>Position Specific Comparison</h2>
-      <p-chart type="polarArea" [data]="polarData" [options]="polarOptions" [plugins]="polarPlugins" height="350px"></p-chart>
+      <p-chart
+        type="polarArea"
+        [data]="polarData"
+        [options]="polarOptions"
+        [plugins]="polarPlugins"
+        height="350px"
+      ></p-chart>
     </div>
 
     <!-- DEVELOPMENT TREND / PLAYER POTENTIAL -->
     <div class="card development-trend">
       <h2>Player Potential</h2>
-      <p-chart type="line" [data]="trendData" [options]="trendOptions" [plugins]="trendPlugins" height="350px"></p-chart>
+      <p-chart
+        type="line"
+        [data]="trendData"
+        [options]="trendOptions"
+        [plugins]="trendPlugins"
+        height="350px"
+      ></p-chart>
     </div>
 
     <!-- PHYSICAL DATA (only non-GK AND only if we have stats) -->
@@ -198,7 +210,7 @@
             [data]="pc.data"
             [options]="pc.options"
             height="160px"
-            [plugins]="[dataLabelPlugin, averageLinePlugin]"
+            [plugins]="[dataLabelPlugin]"
           ></p-chart>
         </div>
         }
