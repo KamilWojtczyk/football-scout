@@ -175,6 +175,15 @@
     <!-- POLAR CHART -->
     <div class="card spider-chart">
       <h2>Position Specific Comparison</h2>
+      <div class="polar-legend" *ngIf="legendGroups.length">
+        <div class="legend-item" *ngFor="let group of legendGroups; let i = index">
+          <span
+            class="legend-dot"
+            [ngStyle]="{ 'background-color': polarGroupStyles[group].fill }"
+          ></span>
+          <span class="legend-label"> {{ i + 1 }}. {{ polarGroupLabels[group] }} </span>
+        </div>
+      </div>
       <p-chart
         type="polarArea"
         [data]="polarData"

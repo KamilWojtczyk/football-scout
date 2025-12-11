@@ -365,3 +365,32 @@
     margin-top: 1rem;
   }
 }
+
+.polar-wrapper {
+  display: flex;
+  flex-direction: column;
+}
+
+.polar-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+  font-size: 0.75rem;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.legend-dot {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 999px;
+}
+
+.legend-label {
+  color: #e5e7eb;
+}
