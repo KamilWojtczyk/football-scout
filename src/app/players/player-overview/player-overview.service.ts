@@ -656,7 +656,7 @@ export class PlayerOverviewService {
         ctx.textAlign = 'center';
         ctx.font = 'bold 14px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
 
-        const labelPaddingX = 6;
+        const labelPaddingX = 2;
         const labelPaddingY = 3;
         const approxTextHeight = 12;
         const labelY = chartArea.top - 30;
@@ -669,7 +669,7 @@ export class PlayerOverviewService {
 
           const metrics = ctx.measureText(text);
           const textWidth = metrics.width;
-          const totalWidth = textWidth + labelPaddingX * 2;
+          const totalWidth = textWidth + labelPaddingX;
 
           if (totalWidth > bandWidth - 4) {
             return;
