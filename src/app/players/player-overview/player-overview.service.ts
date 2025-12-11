@@ -644,19 +644,6 @@ export class PlayerOverviewService {
               nextPeriod = this.getAgePeriod(nextAge, group);
             }
           }
-
-          if (period !== nextPeriod) {
-            const lineX = right;
-            ctx.save();
-            ctx.beginPath();
-            const verticalMargin = 15;
-            ctx.moveTo(lineX, verticalMargin);
-            ctx.lineTo(lineX, chart.height - 40);
-            ctx.lineWidth = 1;
-            ctx.strokeStyle = '#60a5fa';
-            ctx.stroke();
-            ctx.restore();
-          }
         });
 
         const currentAge = isNum(player?.['age']) ? (player!['age'] as number) : null;

@@ -72,12 +72,12 @@ export const BG_COLORS = {
 };
 
 export const AGE_BAND_COLORS: Record<AgePeriodKey, string> = {
-  early: 'rgba(124, 252, 0, 0.75)',
-  late: 'rgba(50, 205, 50, 0.9)',
-  performance: 'rgba(0, 100, 0, 0.95)',
-  peak: 'rgba(255, 245, 157, 0.95)',
-  past: 'rgba(181, 23, 0, 0.5)',
-  history: 'rgba(238, 34, 12, 0.3)',
+  early: 'rgba(190, 242, 100, 1)',
+  late: 'rgba(74, 222, 128, 1)',
+  performance: 'rgba(34, 197, 94, 1)',
+  peak: 'rgba(253, 224, 71, 1)',
+  past: 'rgb(197, 168, 161, 1)',
+  history: 'rgb(217, 68, 55, 1)',
 };
 
 export const AGE_BAND_LABELS: Record<AgePeriodKey, string> = {
@@ -98,10 +98,7 @@ export const POLAR_GROUP_LABELS: Record<PolarGroupKey, string> = {
   scoring: 'Scoring',
 };
 
-export const TAB_POLAR_METRIC_ORDER: Record<
-  string,
-  Partial<Record<PolarGroupKey, string[]>>
-> = {
+export const TAB_POLAR_METRIC_ORDER: Record<string, Partial<Record<PolarGroupKey, string[]>>> = {
   Goalkeeper: {
     stopping: ['parries_quality', 'saves_quality'],
     anticipation: ['interceptions_per_90'],
