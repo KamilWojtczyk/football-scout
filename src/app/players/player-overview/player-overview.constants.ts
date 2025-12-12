@@ -72,12 +72,12 @@ export const BG_COLORS = {
 };
 
 export const AGE_BAND_COLORS: Record<AgePeriodKey, string> = {
-  early: 'rgba(190, 242, 100, 1)',
-  late: 'rgba(74, 222, 128, 1)',
-  performance: 'rgba(34, 197, 94, 1)',
-  peak: 'rgba(253, 224, 71, 1)',
-  past: 'rgb(197, 168, 161, 1)',
-  history: 'rgb(217, 68, 55, 1)',
+  early: 'rgba(124, 252, 0, 0.6)',
+  late: 'rgba(50, 205, 50, 0.7)',
+  performance: 'rgba(0, 100, 0, 0.95)',
+  peak: 'rgba(253, 230, 138, 0.75)',
+  past: 'rgba(181, 23, 0, 0.4)',
+  history: 'rgba(238, 34, 12, 0.2)',
 };
 
 export const AGE_BAND_LABELS: Record<AgePeriodKey, string> = {

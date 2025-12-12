@@ -98,13 +98,6 @@ export class PlayerOverviewService {
     return BG_COLORS.DARK_RED;
   }
 
-  getScoreTextColor(value: number): string {
-    if (value < 60) {
-      return '#f9fafb';
-    }
-    return '#111827';
-  }
-
   getDataLabelValue(ctx: any): number {
     const ds = ctx?.dataset;
     const idx = ctx?.dataIndex;
@@ -249,22 +242,19 @@ export class PlayerOverviewService {
           display: true,
           color: (ctx: any) => {
             const value = this.getDataLabelValue(ctx);
-            return this.getScoreTextColor(value);
-          },
-          backgroundColor: (ctx: any) => {
-            const value = this.getDataLabelValue(ctx);
             return this.getScoreColor(value);
           },
+          backgroundColor: 'rgba(45, 45, 46)',
           borderRadius: 4,
           font: {
-            weight: 'bold',
-            size: 11,
+            weight: 'bolder',
+            size: 12,
           },
           padding: 4,
           formatter: (value: any) => Math.round(value),
           anchor: 'end',
           align: 'start',
-          offset: -4,
+          offset: 0,
         },
       },
       scales: {
