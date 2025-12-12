@@ -7,6 +7,8 @@ import {
   AGE_BAND_LABELS,
   AGE_CURVE_CONFIG,
   BG_COLORS,
+  MARKET_VALUE_COL,
+  OVERALL_COL,
   POLAR_GROUP_ORDER,
   POLAR_GROUP_STYLES,
   TAB_POLAR_METRIC_ORDER,
@@ -117,40 +119,83 @@ export class PlayerOverviewService {
     return 0;
   }
 
-  computeQuantiles(rows: PlayerRow[], field: string): Quantiles | null {
-    const values = rows.map((r) => r[field]).filter((v) => isNum(v)) as number[];
-
+  private computeQuantilesFromValues(values: number[]): Quantiles | null {
     if (!values.length) return null;
-    values.sort((a, b) => a - b);
+    const sorted = [...values].sort((a, b) => a - b);
 
     const idx = (p: number) =>
-      values[Math.floor(p * (values.length - 1))] ?? values[values.length - 1];
+      sorted[Math.floor(p * (sorted.length - 1))] ?? sorted[sorted.length - 1];
 
     return [idx(0.2), idx(0.4), idx(0.6), idx(0.8)];
   }
 
-  getStarRating(
-    value: number | null | undefined,
-    type: 'value' | 'cost',
-    quantiles: Quantiles | null
-  ): number {
-    if (!isNum(value) || !quantiles) return 0;
+  getValueForMoneyStars(player: PlayerRow | null, allRows: PlayerRow[]): number {
+    if (!player) return 0;
 
-    const [q20, q40, q60, q80] = quantiles;
+    const candidates = allRows.filter((r) => isNum(r[MARKET_VALUE_COL]) && isNum(r[OVERALL_COL]));
+    const n = candidates.length;
+    if (!n) return 0;
 
-    if (type === 'value') {
-      if (value >= q80) return 5;
-      if (value >= q60) return 4;
-      if (value >= q40) return 3;
-      if (value >= q20) return 2;
-      return 1;
+    const mvSortedAsc = [...candidates].sort(
+      (a, b) => (a[MARKET_VALUE_COL] as number) - (b[MARKET_VALUE_COL] as number)
+    );
+    const mvPct = new Map<PlayerRow, number>();
+
+    if (n === 1) {
+      mvPct.set(mvSortedAsc[0], 0.5);
     } else {
-      if (value <= q20) return 5;
-      if (value <= q40) return 4;
-      if (value <= q60) return 3;
-      if (value <= q80) return 2;
-      return 1;
+      mvSortedAsc.forEach((r, i) => {
+        mvPct.set(r, i / (n - 1));
+      });
     }
+
+    const ovSortedAsc = [...candidates].sort(
+      (a, b) => (a[OVERALL_COL] as number) - (b[OVERALL_COL] as number)
+    );
+    const ovPct = new Map<PlayerRow, number>();
+
+    if (n === 1) {
+      ovPct.set(ovSortedAsc[0], 0.5);
+    } else {
+      ovSortedAsc.forEach((r, i) => {
+        ovPct.set(r, i / (n - 1));
+      });
+    }
+
+    const scoreByPlayer = new Map<PlayerRow, number>();
+    const scores: number[] = [];
+
+    for (const r of candidates) {
+      const pMv = mvPct.get(r) ?? 0;
+      const pOv = ovPct.get(r) ?? 0;
+      const score = pOv - pMv;
+      scoreByPlayer.set(r, score);
+      scores.push(score);
+    }
+
+    scores.sort((a, b) => a - b);
+
+    const idx = (p: number) =>
+      scores[Math.floor(p * (scores.length - 1))] ?? scores[scores.length - 1];
+
+    const q20 = idx(0.2);
+    const q40 = idx(0.4);
+    const q60 = idx(0.6);
+    const q80 = idx(0.8);
+
+    const thisPlayer = candidates.find(
+      (r) => r === player || r['player_name'] === player['player_name']
+    );
+    if (!thisPlayer) return 0;
+
+    const s = scoreByPlayer.get(thisPlayer);
+    if (s == null) return 0;
+
+    if (s >= q80) return 5;
+    if (s >= q60) return 4;
+    if (s >= q40) return 3;
+    if (s >= q20) return 2;
+    return 1;
   }
 
   getPolarChart(

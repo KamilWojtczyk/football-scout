@@ -62,31 +62,9 @@
           <span class="metric-label">Value for Money</span>
           <div
             class="stars"
-            [title]="
-              player['value_for_money'] != null
-                ? (player['value_for_money'] | number : '1.0-0')
-                : ''
-            "
+            title="Stars vs players with similar market value (higher overall = more stars)"
           >
-            @for (filled of getStarsArray(getStarRating(player['value_for_money'], 'value')); track
-            $index) {
-            <i class="pi" [ngClass]="filled ? 'pi-star-fill' : 'pi-star'"></i>
-            }
-          </div>
-        </div>
-
-        <div class="metric-item">
-          <span class="metric-label">Cost Efficiency</span>
-          <div
-            class="stars"
-            [title]="
-              player['cost_per_point_k'] != null
-                ? (player['cost_per_point_k'] | number : '1.1-1') + ' k€/pt'
-                : ''
-            "
-          >
-            @for (filled of getStarsArray(getStarRating(player['cost_per_point_k'], 'cost')); track
-            $index) {
+            @for (filled of getStarsArray(valueForMoneyStars); track $index) {
             <i class="pi" [ngClass]="filled ? 'pi-star-fill' : 'pi-star'"></i>
             }
           </div>

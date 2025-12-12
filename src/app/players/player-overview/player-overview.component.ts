@@ -44,8 +44,7 @@ export class PlayerOverviewComponent implements OnInit {
 
   physicalCharts: PhysicalChartDef[] = [];
 
-  private valueQuantiles: Quantiles | null = null;
-  private costQuantiles: Quantiles | null = null;
+  valueForMoneyStars = 0;
 
   contractDays: number | null = null;
   contractBadgeClass = '';
@@ -90,7 +89,11 @@ export class PlayerOverviewComponent implements OnInit {
 
           if (this.player) {
             this.initContractMeta();
-            this.initStarQuantiles();
+
+            this.valueForMoneyStars = this.playerOverviewService.getValueForMoneyStars(
+              this.player,
+              this.tabRows
+            );
 
             // Polar Chart
             const polarParams = this.playerOverviewService.getPolarChart(
@@ -133,22 +136,6 @@ export class PlayerOverviewComponent implements OnInit {
     this.contractDays = daysLeftFromIso(iso);
     this.contractBadgeClass = contractDaysLeftClass(this.contractDays);
     this.contractBadgeLabel = formatDaysLeft(this.contractDays);
-  }
-
-  private initStarQuantiles() {
-    this.valueQuantiles = this.playerOverviewService.computeQuantiles(
-      this.tabRows,
-      'value_for_money'
-    );
-    this.costQuantiles = this.playerOverviewService.computeQuantiles(
-      this.tabRows,
-      'cost_per_point_k'
-    );
-  }
-
-  getStarRating(value: number | null | undefined, type: 'value' | 'cost'): number {
-    const quantiles = type === 'value' ? this.valueQuantiles : this.costQuantiles;
-    return this.playerOverviewService.getStarRating(value, type, quantiles);
   }
 
   getStarsArray(rating: number): number[] {

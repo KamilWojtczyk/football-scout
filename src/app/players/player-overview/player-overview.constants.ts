@@ -1,5 +1,8 @@
 import { PolarGroupKey, AgePeriodKey } from './player-overview.types';
 
+export const OVERALL_COL = 'overall_avg_last_4';
+export const MARKET_VALUE_COL = 'market_value';
+
 export const POLAR_GROUP_ORDER: PolarGroupKey[] = [
   'stopping', // 1. Stopping / Saving
   'anticipation', // 2. Anticipation
