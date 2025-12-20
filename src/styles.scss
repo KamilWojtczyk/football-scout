@@ -265,3 +265,24 @@ router-outlet {
     font-size: 12px;
   }
 }
+
+/* ==================== SHARED SCORE BADGES ==================== */
+.score-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 0.75rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  min-width: 2.1rem;
+  text-align: center;
+}
+
+/* Band Colors */
+.band-dg, .physical-dg, .contract-band-dg { background: var(--score-90); color: #0a0a0a; }
+.band-g,  .physical-g,  .contract-band-g  { background: var(--score-80); color: #0a0a0a; }
+.band-lg, .physical-lg, .contract-band-lg { background: var(--score-70); color: #0a0a0a; }
+.band-y,  .physical-y,  .contract-band-y  { background: var(--score-60); color: #0a0a0a; }
+.band-o,  .physical-o,  .contract-band-o  { background: var(--score-50); color: #0a0a0a; }
+.band-r,  .physical-r,  .contract-band-r  { background: var(--score-low); color: #ffffff; }

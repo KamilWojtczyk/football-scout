@@ -408,119 +408,12 @@
   }
 }
 
-/* ==================== SCORE BADGES ==================== */
 .badge-cell {
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.score-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-  font-size: 0.75rem;
-  padding: 0.15rem 0.4rem;
-  border-radius: 3px;
-  min-width: 2rem;
-  text-align: center;
-}
-
-/* Score band colors */
-.band-dg {
-  background: var(--score-90);
-  color: #0a0a0a;
-}
-
-.band-g {
-  background: var(--score-80);
-  color: #0a0a0a;
-}
-
-.band-lg {
-  background: var(--score-70);
-  color: #0a0a0a;
-}
-
-.band-y {
-  background: var(--score-60);
-  color: #0a0a0a;
-}
-
-.band-o {
-  background: var(--score-50);
-  color: #0a0a0a;
-}
-
-.band-r {
-  background: var(--score-low);
-  color: #ffffff;
-}
-
-/* Physical stats - percentile based */
-.physical-dg {
-  background: var(--score-90);
-  color: #0a0a0a;
-}
-
-.physical-g {
-  background: var(--score-80);
-  color: #0a0a0a;
-}
-
-.physical-lg {
-  background: var(--score-70);
-  color: #0a0a0a;
-}
-
-.physical-y {
-  background: var(--score-60);
-  color: #0a0a0a;
-}
-
-.physical-o {
-  background: var(--score-50);
-  color: #0a0a0a;
-}
-
-.physical-r {
-  background: var(--score-low);
-  color: #ffffff;
-}
-
-/* Contract days left color bands */
-.contract-band-dg {
-  background: var(--score-90);
-  color: #0a0a0a;
-}
-
-.contract-band-g {
-  background: var(--score-80);
-  color: #0a0a0a;
-}
-
-.contract-band-lg {
-  background: var(--score-70);
-  color: #0a0a0a;
-}
-
-.contract-band-y {
-  background: var(--score-60);
-  color: #0a0a0a;
-}
-
-.contract-band-o {
-  background: var(--score-50);
-  color: #0a0a0a;
-}
-
-.contract-band-r {
-  background: var(--score-low);
-  color: #ffffff;
-}
-
-/* ==================== VALUE DISPLAY ==================== */
 .market-value {
   font-weight: 600;
   font-size: 0.8rem;
@@ -532,7 +425,6 @@
   color: var(--text-secondary);
 }
 
-/* ==================== EMPTY STATE ==================== */
 .empty-state {
   padding: 2rem;
   text-align: center;
@@ -554,7 +446,6 @@
   }
 }
 
-/* ==================== LOADING STATE ==================== */
 .loading-state {
   padding: 2rem;
   text-align: center;
@@ -570,7 +461,6 @@
   }
 }
 
-/* ==================== RESPONSIVE ==================== */
 @media (max-width: 768px) {
   ::ng-deep .p-datatable {
     font-size: 0.75rem;

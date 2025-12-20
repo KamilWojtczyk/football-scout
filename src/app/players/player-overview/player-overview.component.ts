@@ -7,27 +7,20 @@ import ChartDataLabels from 'chartjs-plugin-datalabels';
 import { switchMap, map, forkJoin } from 'rxjs';
 
 import { DataService } from '../../data.service';
-import { InjuryHistoryRecord, Manifest, PlayerRow, InjuryRow } from '../../types';
+import { Manifest, PlayerRow } from '../../types';
 import { daysLeftFromIso, contractDaysLeftClass, formatDaysLeft } from '../../util';
 import { PlayerOverviewService } from './player-overview.service';
 import {
   POLAR_GROUP_STYLES,
   POLAR_GROUP_LABELS,
-  BODY_PART_LABELS,
-  INJURY_BODY_MARKERS,
-  INJURY_TO_BODY_PART_RULES,
 } from './player-overview.constants';
-import { PhysicalChartDef, PolarGroupKey, BodyPartKey } from './player-overview.types';
-
-interface EnrichedInjury extends InjuryRow {
-  body_part: BodyPartKey;
-  timestamp: number;
-}
+import { PhysicalChartDef, PolarGroupKey } from './player-overview.types';
+import { PlayerInjuriesComponent } from './player-injuries/player-injuries.component';
 
 @Component({
   selector: 'app-player-overview',
   standalone: true,
-  imports: [CommonModule, ChartModule],
+  imports: [CommonModule, ChartModule, PlayerInjuriesComponent],
   templateUrl: './player-overview.component.html',
   styleUrls: ['./player-overview.component.scss'],
 })
@@ -61,15 +54,7 @@ export class PlayerOverviewComponent implements OnInit {
 
   readonly polarGroupStyles = POLAR_GROUP_STYLES;
   readonly polarGroupLabels = POLAR_GROUP_LABELS;
-  readonly BODY_PART_LABELS = BODY_PART_LABELS;
   legendGroups: PolarGroupKey[] = [];
-
-  injuryHistory: InjuryHistoryRecord | null = null;
-  allPlayerInjuries: EnrichedInjury[] = [];
-  injuriesLoading = false;
-  selectedBodyPart: BodyPartKey = 'all';
-
-  readonly markers = INJURY_BODY_MARKERS;
 
   get isGoalkeeperTab(): boolean {
     return (this.tabName ?? '').toLowerCase().includes('keeper');
@@ -133,13 +118,6 @@ export class PlayerOverviewComponent implements OnInit {
               tab.columns,
               this.tabName
             );
-
-            const tmId = this.extractTmPlayerId(this.player['tm_url']);
-            if (tmId) {
-              this.loadInjuriesForPlayerId(tmId);
-            } else {
-              this.resetInjuries();
-            }
           }
         },
         error: (err) => console.error(err),
@@ -166,116 +144,5 @@ export class PlayerOverviewComponent implements OnInit {
     return img && img.length
       ? img
       : 'https://img.a.transfermarkt.technology/portrait/header/default.jpg?lm=1';
-  }
-
-  private extractTmPlayerId(tmUrl?: string | null): number | null {
-    if (!tmUrl) return null;
-    const m = tmUrl.match(/spieler\/(\d+)/i);
-    return m ? Number(m[1]) : null;
-  }
-
-  private mapInjuryToBodyPart(name: string): BodyPartKey {
-    const s = (name ?? '').trim();
-    if (!s) return 'other';
-    for (const rule of INJURY_TO_BODY_PART_RULES) {
-      for (const re of rule.re) {
-        if (re.test(s)) return rule.part;
-      }
-    }
-    return 'other';
-  }
-
-  private resetInjuries() {
-    this.injuryHistory = null;
-    this.allPlayerInjuries = [];
-    this.selectedBodyPart = 'all';
-    this.partCountsMap = {};
-  }
-
-  private loadInjuriesForPlayerId(playerId: number) {
-    this.injuriesLoading = true;
-    this.resetInjuries();
-
-    this.dataService.getInjuries().subscribe({
-      next: (all: InjuryHistoryRecord[]) => {
-        const record = all.find((r) => r.player_id === playerId);
-        if (record) {
-          this.injuryHistory = record;
-          this.allPlayerInjuries = (record.injuries || [])
-            .map((inj) => ({
-              ...inj,
-              body_part: this.mapInjuryToBodyPart(inj.injury),
-              timestamp: this.parseTmDate(inj.from),
-            }))
-            .sort((a, b) => b.timestamp - a.timestamp);
-
-          this.calculatePartCounts();
-        }
-      },
-      error: () => {
-        this.resetInjuries();
-      },
-      complete: () => {
-        this.injuriesLoading = false;
-      },
-    });
-  }
-
-  private parseTmDate(d: string): number {
-    const m = (d ?? '').match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-    if (!m) return 0;
-    return new Date(Number(m[3]), Number(m[2]) - 1, Number(m[1])).getTime();
-  }
-
-  selectBodyPart(part: BodyPartKey) {
-    this.selectedBodyPart = part;
-  }
-
-  get selectedPartLabel() {
-    return BODY_PART_LABELS[this.selectedBodyPart];
-  }
-
-  get selectedInjuries() {
-    if (this.selectedBodyPart === 'all') return this.allPlayerInjuries;
-    return this.allPlayerInjuries.filter((i) => i.body_part === this.selectedBodyPart);
-  }
-
-  partCountsMap: Partial<Record<BodyPartKey, number>> = {};
-
-  private calculatePartCounts() {
-    const counts: any = {};
-    for (const inj of this.allPlayerInjuries) {
-      counts[inj.body_part] = (counts[inj.body_part] ?? 0) + 1;
-    }
-    this.partCountsMap = counts;
-  }
-
-  get partCounts(): Partial<Record<BodyPartKey, number>> {
-    return this.partCountsMap;
-  }
-
-  getActiveBodyParts(): BodyPartKey[] {
-    const counts = this.partCounts;
-    const parts: BodyPartKey[] = [
-      'head',
-      'neck',
-      'shoulder',
-      'arm',
-      'hand',
-      'chest',
-      'back',
-      'abdomen',
-      'hip',
-      'thigh',
-      'knee',
-      'calf',
-      'ankle',
-      'foot',
-    ];
-    return parts.filter((p) => (counts[p] ?? 0) > 0);
-  }
-
-  hasInjury(part: BodyPartKey): boolean {
-    return (this.partCounts[part] ?? 0) > 0;
   }
 }
