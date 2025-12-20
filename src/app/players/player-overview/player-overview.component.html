@@ -1,6 +1,5 @@
 @if (player) {
 <div class="player-overview">
-  <!-- HEADER -->
   <div class="header-section">
     <div class="header-top">
       <button class="back-button" (click)="goBack()">
@@ -10,12 +9,9 @@
     </div>
 
     <div class="header-content">
-      <!-- Left: image -->
       <div class="player-image-wrapper">
         <img [src]="getPlayerImage(player)" [alt]="player['player_name']" class="player-image" />
       </div>
-
-      <!-- Middle: basic info -->
       <div class="player-details">
         <div class="name-row">
           <h1>{{ player['player_name'] }}</h1>
@@ -26,44 +22,25 @@
           </a>
           }
         </div>
-
         <div class="subtitle">
           {{ player['position'] }} · {{ player['club'] }} · {{ player['league'] }}
         </div>
-
         <div class="meta-row">
           @if (player['nationality']) {
-          <span class="pill">
-            <i class="pi pi-flag"></i>
-            {{ player['nationality'] }}
-          </span>
+          <span class="pill"><i class="pi pi-flag"></i> {{ player['nationality'] }}</span>
           } @if (player['age'] != null) {
-          <span class="pill">
-            <i class="pi pi-calendar"></i>
-            {{ player['age'] }} yrs
-          </span>
+          <span class="pill"><i class="pi pi-calendar"></i> {{ player['age'] }} yrs</span>
           } @if (player['height'] != null) {
-          <span class="pill">
-            <i class="pi pi-arrow-up"></i>
-            {{ player['height'] }} cm
-          </span>
+          <span class="pill"><i class="pi pi-arrow-up"></i> {{ player['height'] }} cm</span>
           } @if (player['foot']) {
-          <span class="pill">
-            <i class="pi pi-directions"></i>
-            {{ player['foot'] }}
-          </span>
+          <span class="pill"><i class="pi pi-directions"></i> {{ player['foot'] }}</span>
           }
         </div>
       </div>
-
-      <!-- Right: value metrics -->
       <div class="value-metrics">
         <div class="metric-item">
           <span class="metric-label">Value for Money</span>
-          <div
-            class="stars"
-            title="Stars vs players with similar market value (higher overall = more stars)"
-          >
+          <div class="stars" title="Stars vs players with similar market value">
             @for (filled of getStarsArray(valueForMoneyStars); track $index) {
             <i class="pi" [ngClass]="filled ? 'pi-star-fill' : 'pi-star'"></i>
             }
@@ -73,75 +50,57 @@
     </div>
   </div>
 
-  <!-- GRID -->
   <div class="grid-container">
-    <!-- GENERAL INFO -->
     <div class="card general-info">
       <h2>General Information</h2>
-
       <div class="info-columns">
-        <!-- Left column: position / club / league / nationality / age -->
         <div class="info-col">
           <div class="info-item">
             <span class="label">Position</span>
             <span class="value">{{ player['position'] || '—' }}</span>
           </div>
-
           <div class="info-item">
             <span class="label">Club</span>
             <span class="value">{{ player['club'] || '—' }}</span>
           </div>
-
           <div class="info-item">
             <span class="label">League</span>
             <span class="value">{{ player['league'] || '—' }}</span>
           </div>
-
           <div class="info-item">
             <span class="label">Nationality</span>
             <span class="value">{{ player['nationality'] || '—' }}</span>
           </div>
-
           <div class="info-item">
             <span class="label">Age</span>
             <span class="value">{{ player['age'] ?? '—' }}</span>
           </div>
         </div>
-
-        <!-- Right column: foot / height / contract -->
         <div class="info-col">
           <div class="info-item">
             <span class="label">Preferred Foot</span>
             <span class="value">{{ player['foot'] || '—' }}</span>
           </div>
-
           <div class="info-item">
             <span class="label">Height</span>
-            <span class="value">
-              {{ player['height'] != null ? player['height'] + ' cm' : '—' }}
-            </span>
+            <span class="value">{{
+              player['height'] != null ? player['height'] + ' cm' : '—'
+            }}</span>
           </div>
-
           <div class="info-item">
             <span class="label">Market Value</span>
-            <span class="value">
-              {{ player['market_value'] != null ? '€' + (player['market_value'] | number) : '—' }}
-            </span>
+            <span class="value">{{
+              player['market_value'] != null ? '€' + (player['market_value'] | number) : '—'
+            }}</span>
           </div>
-
           <div class="info-item">
             <span class="label">Contract Expires</span>
-            <span class="value">
-              {{ player['contract_expires'] || '—' }}
-            </span>
+            <span class="value">{{ player['contract_expires'] || '—' }}</span>
           </div>
-
           <div class="info-item">
             <span class="label">Days to Expiry</span>
             @if (contractDays !== null) {
-            <span class="score-badge" [ngClass]="contractBadgeClass">
-              {{ contractBadgeLabel }}
-            </span>
+            <span class="score-badge" [ngClass]="contractBadgeClass">{{ contractBadgeLabel }}</span>
             } @else {
             <span class="value">—</span>
             }
@@ -150,7 +109,6 @@
       </div>
     </div>
 
-    <!-- POLAR CHART -->
     <div class="card spider-chart">
       <h2>Position Specific Comparison</h2>
       <div class="polar-legend" *ngIf="legendGroups.length">
@@ -171,7 +129,6 @@
       ></p-chart>
     </div>
 
-    <!-- DEVELOPMENT TREND / PLAYER POTENTIAL -->
     <div class="card development-trend">
       <h2>Player Potential</h2>
       <p-chart
@@ -183,11 +140,9 @@
       ></p-chart>
     </div>
 
-    <!-- PHYSICAL DATA (only non-GK AND only if we have stats) -->
     @if (!isGoalkeeperTab && physicalCharts.length > 0) {
     <div class="card physical-data">
       <h2>Physical Stats</h2>
-
       <div class="physical-grid">
         @for (pc of physicalCharts; track pc.key) {
         <div class="physical-item">
@@ -205,7 +160,6 @@
     </div>
     }
 
-    <!-- ROBUSTNESS -->
     <div class="card robustness">
       <h2>Robustness</h2>
       <div class="placeholder-content">
@@ -213,12 +167,126 @@
       </div>
     </div>
 
-    <!-- INJURY HISTORY -->
-    <div class="card injury-history">
+    <div class="card injuries">
       <h2>Injury History</h2>
-      <div class="placeholder-content">
-        <p>Coming soon</p>
+      <div class="injuries-header">
+        @if (injuryHistory) {
+        <a class="tm-link" [href]="injuryHistory!.injuries_url" target="_blank" rel="noopener">
+          <i class="pi pi-external-link"></i>
+          Transfermarkt Injury History
+        </a>
+        }
       </div>
+
+      @if (injuriesLoading) {
+      <div class="loading-injuries">
+        <i class="pi pi-spin pi-spinner"></i>
+        <span>Loading injuries…</span>
+      </div>
+      } @else if (!injuryHistory) {
+      <div class="no-injuries">
+        <i class="pi pi-check-circle"></i>
+        <span>No injury history found for this player.</span>
+      </div>
+      } @else {
+      <div class="injury-layout">
+        <div class="body-map-panel">
+          <div class="body-map-container">
+            <div class="body-wrapper">
+              <img src="assets/images/body-outline.svg" alt="Body Map" class="body-image" />
+
+              <span class="body-text-label label-front">FRONT</span>
+              <span class="body-text-label label-back">BACK</span>
+
+              @for (m of markers; track m.id) { @if (hasInjury(m.key)) {
+              <button
+                class="injury-marker"
+                [class.active]="selectedBodyPart === m.key"
+                [style.left.%]="(m.x / 567) * 100"
+                [style.top.%]="(m.y / 612) * 100"
+                (click)="selectBodyPart(m.key)"
+                [title]="m.label + ': ' + (partCounts[m.key] ?? 0) + ' injuries'"
+              >
+                <span class="marker-dot"></span>
+              </button>
+              } }
+            </div>
+          </div>
+
+          <div class="filter-chips">
+            <button
+              class="chip"
+              [class.active]="selectedBodyPart === 'all'"
+              (click)="selectBodyPart('all')"
+            >
+              All <span class="chip-count">{{ allPlayerInjuries.length }}</span>
+            </button>
+            @for (part of getActiveBodyParts(); track part) {
+            <button
+              class="chip"
+              [class.active]="selectedBodyPart === part"
+              (click)="selectBodyPart(part)"
+            >
+              {{ BODY_PART_LABELS[part] }} <span class="chip-count">{{ partCounts[part] ?? 0 }}</span>
+            </button>
+            } @if ((partCounts['other'] ?? 0) > 0) {
+            <button
+              class="chip chip-other"
+              [class.active]="selectedBodyPart === 'other'"
+              (click)="selectBodyPart('other')"
+            >
+              Other <span class="chip-count">{{ partCounts['other'] ?? 0 }}</span>
+            </button>
+            }
+          </div>
+        </div>
+
+        <div class="injury-table-panel">
+          <div class="table-header">
+            <h3>{{ selectedPartLabel }}</h3>
+            <span class="injury-count"
+              >{{ selectedInjuries.length }}
+              {{ selectedInjuries.length === 1 ? 'injury' : 'injuries' }}</span
+            >
+          </div>
+
+          @if (selectedInjuries.length === 0) {
+          <div class="no-injuries-category">
+            <i class="pi pi-check-circle"></i>
+            <span>No injuries in this category</span>
+          </div>
+          } @else {
+          <div class="table-scroll">
+            <table class="injury-table">
+              <thead>
+                <tr>
+                  <th>Season</th>
+                  <th>Injury</th>
+                  <th>From</th>
+                  <th>Until</th>
+                  <th class="num">Days</th>
+                  <th class="num">Games</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (row of selectedInjuries; track row.season + '_' + row.from + '_' + row.injury)
+                {
+                <tr>
+                  <td class="season">{{ row.season }}</td>
+                  <td class="injury-name" [title]="row.injury">{{ row.injury }}</td>
+                  <td class="date">{{ row.from }}</td>
+                  <td class="date">{{ row.until }}</td>
+                  <td class="num">{{ row.days ?? '—' }}</td>
+                  <td class="num">{{ row.games_missed ?? '—' }}</td>
+                </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          }
+        </div>
+      </div>
+      }
     </div>
   </div>
 </div>

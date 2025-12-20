@@ -103,3 +103,23 @@ export function formatDaysLeft(days: number | null): string {
   if (days === null) return '—';
   return `${days}`;
 }
+
+export function parseJsonOrJsonl<T = unknown>(raw: string): T[] {
+  const txt = (raw ?? '').replace(/^\uFEFF/, '').trim();
+  if (!txt) return [];
+
+  if (txt.startsWith('[')) {
+    const data = JSON.parse(txt);
+    return Array.isArray(data) ? (data as T[]) : [];
+  }
+
+  const out: T[] = [];
+  for (const line of txt.split(/\r?\n/)) {
+    const s = line.trim();
+    if (!s) continue;
+    try {
+      out.push(JSON.parse(s) as T);
+    } catch {}
+  }
+  return out;
+}

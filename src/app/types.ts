@@ -39,3 +39,21 @@ export interface AdvancedFilters {
   numeric: Record<string, NumericFilter>;
   select: Record<string, any | null>;
 }
+
+export type InjuryRow = {
+  season: string;
+  injury: string;
+  from: string;
+  until: string;
+  days: number | null;
+  games_missed: number | null;
+};
+
+export type InjuryHistoryRecord = {
+  type: 'injury_history';
+  player_id: number;
+  player_href: string;
+  injuries_url: string;
+  injuries: InjuryRow[];
+  fetched_at: string;
+};
