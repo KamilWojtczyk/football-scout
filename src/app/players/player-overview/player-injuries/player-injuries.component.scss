@@ -54,11 +54,11 @@ h2 {
 
 .injury-layout {
   display: grid;
-  grid-template-columns: 1fr 450px;
-  gap: 1.5rem;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
   align-items: start;
 
-  @media (max-width: 900px) {
+  @media (max-width: 1440px) {
     grid-template-columns: 1fr;
   }
 }
