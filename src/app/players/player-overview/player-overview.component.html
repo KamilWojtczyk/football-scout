@@ -160,17 +160,12 @@
     </div>
     }
 
-    <div class="card robustness">
-      <h2>Robustness</h2>
-      <div class="placeholder-content">
-        <p>Coming soon</p>
-      </div>
-    </div>
-
-    <app-player-injuries 
-      class="card injuries" 
+    <app-player-appearances
+      class="card"
       [tmUrl]="player['tm_url']"
-    ></app-player-injuries>
+    ></app-player-appearances>
+
+    <app-player-injuries class="card" [tmUrl]="player['tm_url']"></app-player-injuries>
   </div>
 </div>
 } @else {

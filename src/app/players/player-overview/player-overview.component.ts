@@ -10,17 +10,21 @@ import { DataService } from '../../data.service';
 import { Manifest, PlayerRow } from '../../types';
 import { daysLeftFromIso, contractDaysLeftClass, formatDaysLeft } from '../../util';
 import { PlayerOverviewService } from './player-overview.service';
-import {
-  POLAR_GROUP_STYLES,
-  POLAR_GROUP_LABELS,
-} from './player-overview.constants';
+import { POLAR_GROUP_STYLES, POLAR_GROUP_LABELS } from './player-overview.constants';
 import { PhysicalChartDef, PolarGroupKey } from './player-overview.types';
 import { PlayerInjuriesComponent } from './player-injuries/player-injuries.component';
+import { PlayerAppearancesComponent } from './player-appearances/player-appearances.component';
 
 @Component({
   selector: 'app-player-overview',
   standalone: true,
-  imports: [CommonModule, ChartModule, PlayerInjuriesComponent],
+  imports: [
+    CommonModule,
+    ChartModule,
+    PlayerInjuriesComponent,
+    PlayerAppearancesComponent,
+    PlayerAppearancesComponent,
+  ],
   templateUrl: './player-overview.component.html',
   styleUrls: ['./player-overview.component.scss'],
 })

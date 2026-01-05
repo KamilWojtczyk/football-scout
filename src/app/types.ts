@@ -57,3 +57,49 @@ export type InjuryHistoryRecord = {
   injuries: InjuryRow[];
   fetched_at: string;
 };
+
+export type AppearanceTotals = {
+  matches_total: number;
+  matches_played: number;
+  minutes_played: number;
+  goals: number;
+  assists: number;
+  yellow_cards: number;
+  second_yellow_cards: number;
+  red_cards: number;
+};
+
+export type AppearanceSummary = {
+  squad: number;
+  starting_eleven: number;
+  substituted_in: number;
+  on_the_bench: number;
+  suspended: number;
+  injured: number;
+  absence: number;
+};
+
+export type AppearanceCompetition = {
+  competition_code: string;
+  competition_name: string;
+  summary: AppearanceSummary;
+  totals: AppearanceTotals;
+};
+
+export type AppearanceSeason = {
+  season: string;
+  url: string;
+  competitions: AppearanceCompetition[];
+};
+
+export type AppearanceHistoryRecord = {
+  type: 'appearance_history';
+  player_id: number;
+  player_href: string;
+  player_code?: string;
+  player_name?: string;
+  parent?: any;
+  appearances_url: string;
+  seasons: AppearanceSeason[];
+  fetched_at: string;
+};

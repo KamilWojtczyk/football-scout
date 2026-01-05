@@ -1,0 +1,138 @@
+<h2>Appearances</h2>
+
+@if (loading) {
+<div class="placeholder">
+  <i class="pi pi-spin pi-spinner"></i>
+  <span>Loading appearances…</span>
+</div>
+} @else if (!record) {
+<div class="placeholder">
+  <i class="pi pi-info-circle"></i>
+  <span>No appearances data found.</span>
+</div>
+} @else {
+<div class="rings">
+  <div class="ring-card">
+    <div class="ring" [style.--p]="startingPct">
+      <div class="ring-inner">{{ startingPct | number : '1.0-0' }}%</div>
+    </div>
+    <div class="ring-label">Starting eleven</div>
+  </div>
+
+  <div class="ring-card">
+    <div class="ring" [style.--p]="minutesPct">
+      <div class="ring-inner">{{ minutesPct | number : '1.0-0' }}%</div>
+    </div>
+    <div class="ring-label">Minutes</div>
+  </div>
+
+  <div class="ring-card">
+    <div class="ring" [style.--p]="goalPct">
+      <div class="ring-inner">{{ goalPct | number : '1.0-0' }}%</div>
+    </div>
+    <div class="ring-label">Goal participation</div>
+  </div>
+</div>
+
+<div class="controls-panel">
+  <div class="filter-chips">
+    <button class="chip" [class.active]="selectedSeason === 'all'" (click)="selectedSeason = 'all'">
+      All (last 2 seasons)
+    </button>
+    @for (s of seasons; track s) {
+    <button class="chip" [class.active]="selectedSeason === s" (click)="selectedSeason = s">
+      {{ formatSeasonLabel(s) }}
+    </button>
+    }
+  </div>
+
+  @if (record.appearances_url) {
+  <a class="tm-link" [href]="record!.appearances_url" target="_blank" rel="noopener">
+    <i class="pi pi-external-link"></i>
+    Transfermarkt details
+  </a>
+  }
+</div>
+
+@if (selectedSeason === 'all') {
+<div class="table-scroll">
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Season</th>
+        <th class="num">Matches</th>
+        <th class="num">Minutes</th>
+        <th class="num">G</th>
+        <th class="num">A</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (r of seasonRows; track r.season) {
+      <tr>
+        <td class="season">{{ formatSeasonLabel(r.season) }}</td>
+        <td class="num">{{ r.agg.matches_played }}/{{ r.agg.matches_total }}</td>
+        <td class="num">{{ r.agg.minutes_played }}</td>
+        <td class="num">{{ r.agg.goals }}</td>
+        <td class="num">{{ r.agg.assists }}</td>
+      </tr>
+      }
+    </tbody>
+  </table>
+</div>
+} @else {
+<div class="table-scroll">
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Competition</th>
+        <th class="num">Matches</th>
+        <th class="num">Minutes</th>
+        <th class="num">G</th>
+        <th class="num">A</th>
+        <th class="num">YC</th>
+        <th class="num">RC</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (c of competitionRows; track c.competition_code) {
+      <tr>
+        <td class="comp">{{ c.competition_name }}</td>
+        <td class="num">{{ c.totals.matches_played }}/{{ c.totals.matches_total }}</td>
+        <td class="num">{{ c.totals.minutes_played }}</td>
+        <td class="num">{{ c.totals.goals }}</td>
+        <td class="num">{{ c.totals.assists }}</td>
+        <td class="num">{{ c.totals.yellow_cards }}</td>
+        <td class="num">{{ c.totals.red_cards }}</td>
+      </tr>
+      }
+    </tbody>
+  </table>
+</div>
+} }
+
+<div class="summary-footer">
+  <span class="stat-item"
+    ><span class="label">Squad:</span> <span class="val">{{ activeAgg.squad }}</span></span
+  >
+  <span class="stat-item"
+    ><span class="label">Starting eleven:</span>
+    <span class="val">{{ activeAgg.starting_eleven }}</span></span
+  >
+  <span class="stat-item"
+    ><span class="label">Substituted in:</span>
+    <span class="val">{{ activeAgg.substituted_in }}</span></span
+  >
+  <span class="stat-item"
+    ><span class="label">On the bench:</span>
+    <span class="val">{{ activeAgg.on_the_bench }}</span></span
+  >
+  <span class="stat-item"
+    ><span class="label">Suspended:</span> <span class="val">{{ activeAgg.suspended }}</span></span
+  >
+  <span class="stat-item"
+    ><span class="label">Injured:</span> <span class="val">{{ activeAgg.injured }}</span></span
+  >
+  <span class="stat-item"
+    ><span class="label">Absence:</span> <span class="val">{{ activeAgg.absence }}</span></span
+  >
+</div>
