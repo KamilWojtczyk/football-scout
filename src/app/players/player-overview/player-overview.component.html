@@ -13,6 +13,14 @@
         <img [src]="getPlayerImage(player)" [alt]="player['player_name']" class="player-image" />
       </div>
       <div class="player-details">
+        @if (player['overall_avg_last_4'] != null) {
+        <span
+          class="score-badge"
+          [ngClass]="getOverallScoreBadgeClass(player['overall_avg_last_4'])"
+        >
+          {{ player['overall_avg_last_4'] }}
+        </span>
+        }
         <div class="name-row">
           <h1>{{ player['player_name'] }}</h1>
           @if (player['tm_url']) {
@@ -23,19 +31,24 @@
           }
         </div>
         <div class="subtitle">
-          {{ player['position'] }} · {{ player['club'] }} · {{ player['league'] }}
+          @if (player['age'] != null) { {{ player['age'] }} yrs · } {{ player['position'] }} ·
+          {{ player['club'] }} · {{ player['league'] }} @if (player['nationality']) { ·
+          {{ player['nationality'] }} <i class="pi pi-flag"></i> }
         </div>
-        <div class="meta-row">
-          @if (player['nationality']) {
-          <span class="pill"><i class="pi pi-flag"></i> {{ player['nationality'] }}</span>
-          } @if (player['age'] != null) {
-          <span class="pill"><i class="pi pi-calendar"></i> {{ player['age'] }} yrs</span>
-          } @if (player['height'] != null) {
-          <span class="pill"><i class="pi pi-arrow-up"></i> {{ player['height'] }} cm</span>
-          } @if (player['foot']) {
-          <span class="pill"><i class="pi pi-directions"></i> {{ player['foot'] }}</span>
+
+        @if (seasonStats.length > 0) {
+        <div class="season-stats-row">
+          @for (stat of seasonStats; track stat.season) {
+          <div class="season-stat-item">
+            <span class="season-label">{{ stat.season }}</span>
+            <div class="stat-values">
+              <span class="score-badge" [ngClass]="stat.badgeClass">{{ stat.score }}</span>
+              <span class="minutes-label">{{ stat.minutes }}'</span>
+            </div>
+          </div>
           }
         </div>
+        }
       </div>
       <div class="value-metrics">
         <div class="metric-item">
@@ -160,10 +173,7 @@
     </div>
     }
 
-    <app-player-appearances
-      class="card"
-      [tmUrl]="player['tm_url']"
-    ></app-player-appearances>
+    <app-player-appearances class="card" [tmUrl]="player['tm_url']"></app-player-appearances>
 
     <app-player-injuries class="card" [tmUrl]="player['tm_url']"></app-player-injuries>
   </div>

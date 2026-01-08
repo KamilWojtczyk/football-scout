@@ -85,6 +85,13 @@
       flex: 1;
       min-width: 220px;
 
+      .score-badge {
+          font-size: 1.2rem;
+          padding: 0.15rem 0.75rem;
+          min-width: 2.5rem;
+          font-weight: 700;
+        }
+
       .name-row {
         display: flex;
         align-items: center;
@@ -144,6 +151,47 @@
 
           i {
             font-size: 0.8rem;
+          }
+        }
+      }
+      
+      .season-stats-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-top: 0.75rem;
+
+        .season-stat-item {
+          display: flex;
+          align-items: center;
+          gap: 0.4rem;
+          background: rgba(255, 255, 255, 0.04);
+          padding: 0.35rem 0.6rem;
+          border-radius: 8px;
+          border: 1px solid rgba(255, 255, 255, 0.08);
+
+          .season-label {
+            font-size: 0.75rem;
+            color: var(--text-color-secondary);
+            font-weight: 600;
+          }
+
+          .stat-values {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+          }
+
+          .score-badge {
+            font-size: 0.75rem;
+            padding: 0.1rem 0.4rem;
+            min-width: 1.6rem;
+          }
+
+          .minutes-label {
+            font-size: 0.7rem;
+            color: var(--text-color-secondary);
+            font-variant-numeric: tabular-nums;
           }
         }
       }
@@ -222,6 +270,57 @@
       font-weight: 700;
       background: linear-gradient(135deg, var(--primary-color), #60a5fa);
       background-clip: text;
+    }
+    
+    .season-stats-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      padding-bottom: 1rem;
+      margin-bottom: 1rem;
+      border-bottom: 2px solid rgba(59, 130, 246, 0.3);
+
+      .season-stat-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.3rem;
+        background: rgba(255, 255, 255, 0.05);
+        padding: 0.75rem 1.25rem;
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        min-width: 80px;
+        transition: transform 0.2s, background 0.2s;
+
+        .season-label {
+          font-size: 0.9rem;
+          color: var(--text-color-secondary);
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.03em;
+        }
+
+        .stat-values {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 0.3rem;
+        }
+
+        .score-badge {
+          font-size: 0.9rem;
+          padding: 0.15rem 0.75rem;
+          min-width: 2rem;
+          font-weight: 700;
+        }
+
+        .minutes-label {
+          font-size: 0.9rem;
+          color: var(--text-color-secondary);
+          font-variant-numeric: tabular-nums;
+          font-weight: 500;
+        }
+      }
     }
   }
 
