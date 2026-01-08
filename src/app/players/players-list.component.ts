@@ -159,17 +159,21 @@ export class PlayersListComponent implements OnInit, OnDestroy {
   }
 
   private buildColumns(tab: ManifestTab, sample: PlayerRow[]) {
+    const isMinutesCol = (c: ColumnSpec) =>
+      c.key === 'minutes_played' || c.key.startsWith('minutes_played_');
+
     let cols = tab.columns
       .filter(
         (c) =>
-          (c.key !== 'tm_url' &&
+          !isMinutesCol(c) &&
+          ((c.key !== 'tm_url' &&
             c.key !== 'contract_expires' &&
             c.key !== 'club' &&
             c.key !== 'league' &&
             c.key !== 'position' &&
             c.key !== 'nationality' &&
             c.key !== 'image_url') ||
-          c.sticky
+            c.sticky)
       )
       .map((c) => ({
         ...c,
@@ -184,7 +188,6 @@ export class PlayersListComponent implements OnInit, OnDestroy {
       const marketValueIndex = cols.findIndex((c) => c.key === 'market_value');
       const insertIndex = marketValueIndex >= 0 ? marketValueIndex : cols.length;
 
-      // Create synthetic column for days left
       const daysLeftCol: ColMeta = {
         key: 'contract_days_left',
         label: 'Contract Days Left',
