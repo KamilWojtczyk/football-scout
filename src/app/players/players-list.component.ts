@@ -92,6 +92,16 @@ export class PlayersListComponent implements OnInit, OnDestroy {
     'height',
   ]);
 
+  private normalizeForSearch(text: string): string {
+    return text
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[-_]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .toLowerCase()
+      .trim();
+  }
+
   isNumericColumn(col: ColMeta): boolean {
     return this.numericKinds.has(col.kind);
   }
@@ -265,12 +275,12 @@ export class PlayersListComponent implements OnInit, OnDestroy {
           if (nf.max != null && num > nf.max) return false;
         }
 
-        // Text filters (contains, case-insensitive)
+        // Text filters (contains, case-insensitive, accent-insensitive)
         const tf = text[key];
         if (tf && tf.trim()) {
-          const needle = tf.trim().toLowerCase();
+          const needle = this.normalizeForSearch(tf);
           const raw = row[key];
-          const valueStr = (raw ?? '').toString().toLowerCase();
+          const valueStr = this.normalizeForSearch((raw ?? '').toString());
           if (!valueStr.includes(needle)) return false;
         }
       }
