@@ -461,4 +461,37 @@ export class PlayersListComponent implements OnInit, OnDestroy {
       this.router.navigate(['/players', this.selectedTabName, player.player_name]);
     }
   }
+
+  private openPlayerInNewTab(row: PlayerRow) {
+    if (!this.selectedTabName || !row['player_name']) return;
+
+    const tree = this.router.createUrlTree(['/players', this.selectedTabName, row['player_name']]);
+    const url = this.router.serializeUrl(tree);
+
+    window.open(url, '_blank', 'noopener,noreferrer');
+  }
+
+  onRowMouseDown(ev: MouseEvent) {
+    if (ev.button === 1) {
+      ev.preventDefault();
+    }
+  }
+
+  onRowAuxClick(ev: MouseEvent, row: PlayerRow) {
+    if (ev.button !== 1) return;
+
+    ev.preventDefault();
+    ev.stopPropagation();
+
+    this.openPlayerInNewTab(row);
+  }
+
+  onRowClick(ev: MouseEvent, row: PlayerRow) {
+    if (ev.ctrlKey || ev.metaKey) {
+      ev.preventDefault();
+      ev.stopPropagation();
+      this.openPlayerInNewTab(row);
+      return;
+    }
+  }
 }

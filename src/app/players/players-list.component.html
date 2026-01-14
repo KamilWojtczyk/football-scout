@@ -82,7 +82,12 @@
 
     <!-- Body -->
     <ng-template pTemplate="body" let-row>
-      <tr [pSelectableRow]="row">
+      <tr
+        [pSelectableRow]="row"
+        (auxclick)="onRowAuxClick($event, row)"
+        (mousedown)="onRowMouseDown($event)"
+        (click)="onRowClick($event, row)"
+      >
         @for (c of cols; track c.key) {
         <td [ngClass]="getCellClasses(row, c)">
           @if (c.kind === 'name') { @if (tmLink(row); as url) {

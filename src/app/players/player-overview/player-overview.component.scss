@@ -86,11 +86,11 @@
       min-width: 220px;
 
       .score-badge {
-          font-size: 1.2rem;
-          padding: 0.15rem 0.75rem;
-          min-width: 2.5rem;
-          font-weight: 700;
-        }
+        font-size: 1.2rem;
+        padding: 0.15rem 0.75rem;
+        min-width: 2.5rem;
+        font-weight: 700;
+      }
 
       .name-row {
         display: flex;
@@ -154,7 +154,7 @@
           }
         }
       }
-      
+
       .season-stats-row {
         display: flex;
         flex-wrap: wrap;
@@ -171,7 +171,7 @@
           border: 1px solid rgba(255, 255, 255, 0.08);
 
           .season-label {
-            font-size: 0.75rem;
+            font-size: 0.9rem;
             color: var(--text-color-secondary);
             font-weight: 600;
           }
@@ -183,13 +183,13 @@
           }
 
           .score-badge {
-            font-size: 0.75rem;
+            font-size: 0.9rem;
             padding: 0.1rem 0.4rem;
             min-width: 1.6rem;
           }
 
           .minutes-label {
-            font-size: 0.7rem;
+            font-size: 0.8rem;
             color: var(--text-color-secondary);
             font-variant-numeric: tabular-nums;
           }
@@ -271,7 +271,7 @@
       background: linear-gradient(135deg, var(--primary-color), #60a5fa);
       background-clip: text;
     }
-    
+
     .season-stats-row {
       display: flex;
       flex-wrap: wrap;
@@ -344,7 +344,7 @@
       flex-direction: column;
 
       .label {
-        font-size: 0.75rem;
+        font-size: 0.8rem;
         color: var(--text-color-secondary);
         margin-bottom: 0.15rem;
       }
@@ -356,12 +356,11 @@
       }
 
       .score-badge {
+        font-size: 0.9rem;
         align-self: flex-start;
       }
     }
   }
-
-
 
   .physical-grid {
     display: grid;
@@ -441,5 +440,3 @@
 .legend-label {
   color: #e5e7eb;
 }
-
-

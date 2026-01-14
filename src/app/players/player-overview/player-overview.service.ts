@@ -271,6 +271,8 @@ export class PlayerOverviewService {
       ],
     };
 
+    const LOW_LABEL_THRESHOLD = 40;
+
     const options: ChartOptions = {
       maintainAspectRatio: false,
       plugins: {
@@ -291,15 +293,22 @@ export class PlayerOverviewService {
           },
           backgroundColor: 'rgba(45, 45, 46)',
           borderRadius: 4,
-          font: {
-            weight: 'bolder',
-            size: 12,
-          },
+          font: { weight: 'bolder', size: 14 },
           padding: 4,
           formatter: (value: any) => Math.round(value),
           anchor: 'end',
-          align: 'start',
-          offset: 0,
+          align: (ctx: any) => {
+            const v = this.getDataLabelValue(ctx);
+            return v < LOW_LABEL_THRESHOLD ? 'end' : 'start';
+          },
+          offset: (ctx: any) => {
+            const v = this.getDataLabelValue(ctx);
+            if (v >= LOW_LABEL_THRESHOLD) return 0;
+            const t = Math.max(0, Math.min(1, v / LOW_LABEL_THRESHOLD));
+            return Math.round(22 - 12 * t);
+          },
+          clamp: true,
+          clip: false,
         },
       },
       scales: {
