@@ -1,8 +1,9 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { Manifest } from '../types';
 import { DataService } from '../data.service';
+import { AuthService } from '../auth/auth.service';
 
-import { Router, RouterModule } from '@angular/router';
+import { RouterModule } from '@angular/router';
 import { TooltipModule } from 'primeng/tooltip';
 import { CommonModule } from '@angular/common';
 
@@ -14,21 +15,28 @@ import { CommonModule } from '@angular/common';
   styleUrls: ['./header.component.scss'],
 })
 export class HeaderComponent {
+  private dataService = inject(DataService);
+  private authService = inject(AuthService);
+
   manifest: Manifest | null = null;
   loading = false;
 
-  constructor(private data: DataService, public router: Router) {}
+  logout(): void {
+    this.authService.logout();
+  }
 
   ngOnInit() {
-    this.loading = true;
-    this.data.getManifest().subscribe({
-      next: (m) => {
-        this.manifest = m;
-      },
+    if (this.authService.isAuthenticated()) {
+      this.loading = true;
+      this.dataService.getManifest().subscribe({
+        next: (m) => {
+          this.manifest = m;
+        },
       error: () => {
         this.loading = false;
       },
     });
+    }
   }
 
   get formattedUpdateDate(): string {
